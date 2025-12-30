@@ -1,12 +1,26 @@
+﻿using FeatureRequest.FeatureRequests;
 using Riok.Mapperly.Abstractions;
 using Volo.Abp.Mapperly;
 
 namespace FeatureRequest;
 
 [Mapper]
-public partial class FeatureRequestApplicationMappers
+public partial class FeatureRequestToDtoMapper : MapperBase<Entities.FeatureRequest, FeatureRequestDto>
 {
-    /* You can configure your Mapperly mapping configuration here.
-     * Alternatively, you can split your mapping configurations
-     * into multiple mapper classes for a better organization. */
+    public override partial FeatureRequestDto Map(Entities.FeatureRequest source);
+    public override partial void Map(Entities.FeatureRequest source, FeatureRequestDto destination);
+}
+
+[Mapper]
+public partial class CreateDtoToFeatureRequestMapper : MapperBase<CreateFeatureRequestDto, Entities.FeatureRequest>
+{
+    public override partial Entities.FeatureRequest Map(CreateFeatureRequestDto source);
+    public override partial void Map(CreateFeatureRequestDto source, Entities.FeatureRequest destination);
+}
+
+[Mapper]
+public partial class UpdateDtoToFeatureRequestMapper : MapperBase<UpdateFeatureRequestDto, Entities.FeatureRequest>
+{
+    public override partial Entities.FeatureRequest Map(UpdateFeatureRequestDto source);
+    public override partial void Map(UpdateFeatureRequestDto source, Entities.FeatureRequest destination);
 }
