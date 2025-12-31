@@ -6,5 +6,5 @@ public class FeatureRequestMenus
     public const string Home = Prefix + ".Home";
 
     //Add your menu items here...
-
+    public const string FeatureRequests = Prefix + ".FeatureRequests";
 }

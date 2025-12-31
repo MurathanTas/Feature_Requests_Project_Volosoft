@@ -34,6 +34,17 @@ public class FeatureRequestMenuContributor : IMenuContributor
             )
         );
 
+        context.Menu.Items.Insert(
+            0,
+            new ApplicationMenuItem(
+                FeatureRequestMenus.FeatureRequests,
+                l["Özellik İstekleri"],
+                "/FeatureRequests",
+                icon: "fas fa-lightbulb",
+                order: 1
+            )
+        );
+
         if (MultiTenancyConsts.IsEnabled)
         {
             administration.SetSubItemOrder(TenantManagementMenuNames.GroupName, 1);
