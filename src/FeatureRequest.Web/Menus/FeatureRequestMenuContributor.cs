@@ -47,6 +47,17 @@ public class FeatureRequestMenuContributor : IMenuContributor
             )
         );
 
+        context.Menu.Items.Insert(
+            0,
+            new ApplicationMenuItem(
+                "FeatureRequest.Dashboard",
+                "Dashboard",
+                "/FeatureRequests/Dashboard",
+                icon: "fas fa-chart-pie",
+                order: 2
+            )
+        );
+
         // İsteklerim - Sadece giriş yapmış kullanıcılar için
         var currentUser = context.ServiceProvider.GetRequiredService<Volo.Abp.Users.ICurrentUser>();
         if (currentUser.IsAuthenticated)
@@ -64,7 +75,9 @@ public class FeatureRequestMenuContributor : IMenuContributor
         }
 
         // Admin Menu - Özellik İstekleri Yönetimi
-        if (await context.IsGrantedAsync(FeatureRequestPermissions.FeatureRequests.UpdateStatus))
+        var hasAdminPermission = await context.IsGrantedAsync(FeatureRequestPermissions.FeatureRequests.UpdateStatus);
+        
+        if (hasAdminPermission)
         {
             administration.AddItem(
                 new ApplicationMenuItem(
@@ -76,6 +89,12 @@ public class FeatureRequestMenuContributor : IMenuContributor
                 )
             );
         }
+        else
+        {
+            // Normal kullanıcılar için Yönetim menüsünü tamamen gizle
+            administration.TryRemoveMenuItem(SettingManagementMenuNames.GroupName);
+            administration.TryRemoveMenuItem(IdentityMenuNames.GroupName);
+        }
 
         if (MultiTenancyConsts.IsEnabled)
         {
@@ -86,7 +105,10 @@ public class FeatureRequestMenuContributor : IMenuContributor
             administration.TryRemoveMenuItem(TenantManagementMenuNames.GroupName);
         }
 
-        administration.SetSubItemOrder(IdentityMenuNames.GroupName, 2);
-        administration.SetSubItemOrder(SettingManagementMenuNames.GroupName, 3);
+        if (hasAdminPermission)
+        {
+            administration.SetSubItemOrder(IdentityMenuNames.GroupName, 2);
+            administration.SetSubItemOrder(SettingManagementMenuNames.GroupName, 3);
+        }
     }
 }

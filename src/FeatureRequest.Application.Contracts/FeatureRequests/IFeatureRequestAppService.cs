@@ -21,5 +21,6 @@ namespace FeatureRequest.FeatureRequests
         Task<List<FeatureRequestDto>> GetFilteredListAsync(FeatureRequestStatus? status, FeatureRequestCategory? category);
         Task<List<FeatureRequestDto>> GetMyRequestsAsync();
         Task<List<FeatureRequestDto>> GetMyVotedRequestsAsync();
+        Task<DashboardStatisticsDto> GetDashboardStatisticsAsync();
     }
 }

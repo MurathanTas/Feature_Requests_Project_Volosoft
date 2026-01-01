@@ -23,15 +23,18 @@ namespace FeatureRequest.FeatureRequests
         IFeatureRequestAppService
     {
         private readonly IRepository<FeatureRequestVote, Guid> _voteRepository;
+        private readonly IRepository<FeatureRequestComment, Guid> _commentRepository;
         private readonly IIdentityUserRepository _userRepository;
 
         public FeatureRequestAppService(
             IRepository<Entities.FeatureRequest, Guid> repository,
             IRepository<FeatureRequestVote, Guid> voteRepository,
+            IRepository<FeatureRequestComment, Guid> commentRepository,
             IIdentityUserRepository userRepository) 
             : base(repository)
         {
             _voteRepository = voteRepository;
+            _commentRepository = commentRepository;
             _userRepository = userRepository;
         }
 
@@ -279,6 +282,54 @@ namespace FeatureRequest.FeatureRequests
             }
 
             return dtos;
+        }
+
+        public async Task<DashboardStatisticsDto> GetDashboardStatisticsAsync()
+        {
+            var queryable = await Repository.GetQueryableAsync();
+            var allRequests = await AsyncExecuter.ToListAsync(queryable);
+            var allComments = await _commentRepository.GetListAsync();
+
+            var result = new DashboardStatisticsDto
+            {
+                TotalRequests = allRequests.Count,
+                TotalVotes = allRequests.Sum(x => x.VoteCount),
+                TotalComments = allComments.Count
+            };
+
+            // Kategori istatistikleri
+            var categories = Enum.GetValues<FeatureRequestCategory>();
+            foreach (var category in categories)
+            {
+                var requestsInCategory = allRequests.Where(x => x.CategoryId == category).ToList();
+                result.CategoryStats.Add(new CategoryStatDto
+                {
+                    Category = category.ToString(),
+                    RequestCount = requestsInCategory.Count,
+                    TotalVotes = requestsInCategory.Sum(x => x.VoteCount)
+                });
+            }
+
+            // Durum istatistikleri
+            var statuses = Enum.GetValues<FeatureRequestStatus>();
+            foreach (var status in statuses)
+            {
+                result.StatusStats.Add(new StatusStatDto
+                {
+                    Status = status.ToString(),
+                    Count = allRequests.Count(x => x.Status == status)
+                });
+            }
+
+            // En çok oy alan 5 istek
+            var topRequests = allRequests
+                .OrderByDescending(x => x.VoteCount)
+                .Take(5)
+                .ToList();
+
+            result.TopVotedRequests = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(topRequests);
+
+            return result;
         }
     }
 }
