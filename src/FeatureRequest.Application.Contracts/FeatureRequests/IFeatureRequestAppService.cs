@@ -15,6 +15,7 @@ namespace FeatureRequest.FeatureRequests
             UpdateFeatureRequestDto>
     {
         Task UpvoteAsync(Guid id);
+        Task DownvoteAsync(Guid id);
         Task<List<FeatureRequestDto>> GetTopRequestsAsync(int count);
     }
 }

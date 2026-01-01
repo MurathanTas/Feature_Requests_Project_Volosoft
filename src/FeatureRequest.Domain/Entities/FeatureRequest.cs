@@ -17,6 +17,13 @@ namespace FeatureRequest.Entities
         {
             VoteCount++;
         }
+        public void Downvote()
+        {
+            if (VoteCount > 0)
+            {
+                VoteCount--;
+            }
+        }
 
         public FeatureRequestCategory CategoryId { get; set; }
 

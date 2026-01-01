@@ -17,7 +17,7 @@
 
         @if (Model.RequestList != null && Model.RequestList.Any())
         {
-            <div class="list-group">
+            <div id="RequestListContainer" class="list-group">
                 @foreach (var item in Model.RequestList)
                 {
                     <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 border rounded shadow-sm p-3">
@@ -60,35 +60,78 @@
 </div>
 
 @section scripts {
+    <script type="module">
+        import autoAnimate from 'https://cdn.jsdelivr.net/npm/@@formkit/auto-animate/index.mjs';
+
+        // Listeyi bul ve animasyonu başlat
+        const list = document.getElementById('RequestListContainer');
+        if (list) {
+            autoAnimate(list, {
+                duration: 600,
+                easing: 'ease-in-out'
+            });
+        }
+    </script>
+
     <script>
         $(function () {
             var service = featureRequest.featureRequests.featureRequest;
 
-            $('.upvote-btn').click(function (e) {
-                e.preventDefault(); 
+            function reorderItems() {
+                var $container = $('#RequestListContainer');
+                var $items = $container.children('.list-group-item');
 
+                $items.sort(function (a, b) {
+                    var voteA = parseInt($(a).find('.vote-count').text());
+                    var voteB = parseInt($(b).find('.vote-count').text());
+                    return voteB - voteA; 
+                });
+
+                
+                $items.detach().appendTo($container);
+            }
+
+            $('.upvote-btn').click(function (e) {
+                e.preventDefault();
                 var $button = $(this);
                 var id = $button.attr('data-id');
-                var $countSpan = $button.find('.vote-count'); 
+                var $countSpan = $button.find('.vote-count');
+                var isVoted = $button.hasClass('btn-success');
 
-                $button.prop('disabled', true);
+                $button.prop('disabled', true); 
 
-                service.upvote(id).then(function () {
+                if (!isVoted) {
+                    service.upvote(id).then(function () {
+                        var currentCount = parseInt($countSpan.text());
+                        $countSpan.text(currentCount + 1);
 
-                    var currentCount = parseInt($countSpan.text());
-                    $countSpan.text(currentCount + 1);
+                        $button.removeClass('btn-outline-success').addClass('btn-success text-white');
+                        abp.notify.success('Oy verildi +1');
 
-                    $button.removeClass('btn-outline-success').addClass('btn-success text-white');
+                        reorderItems();
 
-                    abp.notify.success('Oyunuz kaydedildi!');
+                        $button.prop('disabled', false);
+                    }).catch(handleError);
+                }
+                else {
+                    service.downvote(id).then(function () {
+                        var currentCount = parseInt($countSpan.text());
+                        $countSpan.text(currentCount - 1);
 
-                   
+                        $button.removeClass('btn-success text-white').addClass('btn-outline-success');
+                        abp.notify.info('Oy geri çekildi');
 
-                }).catch(function (err) {
+                        reorderItems();
+
+                        $button.prop('disabled', false);
+                    }).catch(handleError);
+                }
+
+                function handleError(err) {
                     $button.prop('disabled', false);
-                    abp.notify.error('Bir hata oluştu.');
                     console.error(err);
-                });
+                    abp.notify.error('Hata oluştu.');
+                }
             });
         });
     </script>

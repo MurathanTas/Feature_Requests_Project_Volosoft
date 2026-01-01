@@ -27,12 +27,21 @@ namespace FeatureRequest.FeatureRequests
 
         public async Task UpvoteAsync(Guid id)
         {
+            await UpdateVoteAsync(id, fr => fr.Upvote());
+        }
+
+        public async Task DownvoteAsync(Guid id)
+        {
+            await UpdateVoteAsync(id, fr => fr.Downvote());
+        }
+
+        private async Task UpdateVoteAsync(Guid id, Action<Entities.FeatureRequest> voteAction)
+        {
             var featureRequest = await Repository.GetAsync(id);
 
-            featureRequest.Upvote();
+            voteAction(featureRequest);
 
-            var result = Repository.UpdateAsync(featureRequest);
-            await result;
+            await Repository.UpdateAsync(featureRequest);
         }
 
         public async Task<List<FeatureRequestDto>> GetTopRequestsAsync(int count)
@@ -47,5 +56,7 @@ namespace FeatureRequest.FeatureRequests
 
             return ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
         }
+
+       
     }
 }
