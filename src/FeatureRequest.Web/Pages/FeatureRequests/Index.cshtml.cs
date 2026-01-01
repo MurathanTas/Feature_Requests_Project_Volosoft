@@ -11,6 +11,9 @@ namespace FeatureRequest.Web.Pages.FeatureRequests
         private readonly IFeatureRequestAppService _featureRequestAppService;
 
         public List<FeatureRequestDto> RequestList { get; set; }
+        
+        [BindProperty(SupportsGet = true)]
+        public FeatureRequestCategory? SelectedCategory { get; set; }
 
         public IndexModel(IFeatureRequestAppService featureRequestAppService)
         {
@@ -19,7 +22,7 @@ namespace FeatureRequest.Web.Pages.FeatureRequests
 
         public async Task OnGetAsync()
         {
-            RequestList = await _featureRequestAppService.GetTopRequestsAsync(1000);
+            RequestList = await _featureRequestAppService.GetTopRequestsAsync(1000, SelectedCategory);
         }
     }
 }

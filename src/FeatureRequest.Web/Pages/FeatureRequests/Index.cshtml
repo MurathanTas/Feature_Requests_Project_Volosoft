@@ -9,11 +9,23 @@
 }
 
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h1>🚀 Özellik İstekleri</h1>
-        <a href="/FeatureRequests/Create" class="btn btn-primary">
-            <i class="fa fa-plus"></i> Yeni İstek Oluştur
-        </a>
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h1>🚀 Özellik İstekleri</h1>
+            <a href="/FeatureRequests/Create" class="btn btn-primary">
+                <i class="fa fa-plus"></i> Yeni İstek Oluştur
+            </a>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <label class="mb-0 fw-bold">Kategori:</label>
+            <select id="categoryFilter" class="form-select form-select-sm" style="width: auto;">
+                <option value="">Tümü</option>
+                @foreach (var category in Enum.GetValues<FeatureRequestCategory>())
+                {
+                    <option value="@category" selected="@(Model.SelectedCategory == category)">@category</option>
+                }
+            </select>
+        </div>
     </div>
     <div class="card-body">
 
@@ -127,6 +139,16 @@
                          $button.prop('disabled', false);
                          abp.notify.error('Bir hata oluştu.');
                     });
+                }
+            });
+
+            // Kategori filtresi değiştiğinde sayfayı yeniden yükle
+            $('#categoryFilter').change(function() {
+                var selectedCategory = $(this).val();
+                if (selectedCategory) {
+                    window.location.href = '/FeatureRequests?SelectedCategory=' + selectedCategory;
+                } else {
+                    window.location.href = '/FeatureRequests';
                 }
             });
         });

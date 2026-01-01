@@ -16,6 +16,6 @@ namespace FeatureRequest.FeatureRequests
     {
         Task UpvoteAsync(Guid id);
         Task DownvoteAsync(Guid id);
-        Task<List<FeatureRequestDto>> GetTopRequestsAsync(int count);
+        Task<List<FeatureRequestDto>> GetTopRequestsAsync(int count, FeatureRequestCategory? category = null);
     }
 }

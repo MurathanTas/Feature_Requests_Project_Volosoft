@@ -108,10 +108,19 @@ namespace FeatureRequest.FeatureRequests
             return result;
         }
 
-        public async Task<List<FeatureRequestDto>> GetTopRequestsAsync(int count)
+        public async Task<List<FeatureRequestDto>> GetTopRequestsAsync(int count, FeatureRequestCategory? category = null)
         {
             var queryable = await Repository.GetQueryableAsync();
-            var query = queryable.OrderByDescending(x => x.VoteCount).Take(count);
+            
+            if (category.HasValue)
+            {
+                queryable = queryable.Where(x => x.CategoryId == category.Value);
+            }
+            
+            var query = queryable
+                .OrderByDescending(x => x.VoteCount)
+                .ThenByDescending(x => x.CreationTime)
+                .Take(count);
             var entities = await AsyncExecuter.ToListAsync(query);
             var dtos = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
 
