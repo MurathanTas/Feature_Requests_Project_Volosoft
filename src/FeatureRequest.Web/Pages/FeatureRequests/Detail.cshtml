@@ -15,7 +15,7 @@
                 <i class="fa fa-arrow-left"></i> Listeye Dön
             </a>
 
-            @if (CurrentUser.IsAuthenticated)
+            @if (CurrentUser.IsAuthenticated && CurrentUser.Id == Model.RequestDetail.CreatorId)
             {
                 <a href="/FeatureRequests/Edit?id=@Model.RequestDetail.Id" class="btn btn-warning shadow-sm">
                     <i class="fa fa-edit"></i> Düzenle
@@ -82,11 +82,65 @@ else
     </div>
 }
 
+
+<div class="container mt-4 mb-5">
+    <h3 class="mb-3">💬 Yorumlar (<span id="commentCount">@(Model.Comments?.Count ?? 0)</span>)</h3>
+
+    @if (CurrentUser.IsAuthenticated)
+    {
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <div id="commentForm">
+                    <input type="hidden" id="featureRequestId" value="@Model.RequestDetail.Id" />
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Düşüncelerinizi paylaşın:</label>
+                        <textarea id="commentText" class="form-control" rows="3" placeholder="Bu özellik hakkında ne düşünüyorsunuz?"></textarea>
+                        <span id="commentError" class="text-danger"></span>
+                    </div>
+                    <button type="button" id="submitCommentBtn" class="btn btn-primary px-4">
+                        <i class="fa fa-paper-plane"></i> Gönder
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning">
+            Yorum yapmak için <a href="/Account/Login" class="alert-link">giriş yapmalısınız</a>.
+        </div>
+    }
+
+    <div id="commentsContainer" class="list-group">
+        @if (Model.Comments != null && Model.Comments.Any())
+        {
+            @foreach (var comment in Model.Comments)
+            {
+                <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 border rounded bg-white">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1 fw-bold text-primary">
+                            <i class="fa fa-user-circle"></i> @comment.CreatorUserName
+                        </h6>
+                        <small class="text-muted">@comment.CreationTime.ToString("g")</small>
+                    </div>
+                    <p class="mb-1 text-dark mt-2">@comment.CommentText</p>
+                </div>
+            }
+        }
+    </div>
+    
+    <p id="noCommentsText" class="text-muted text-center py-4" style="display: @(Model.Comments == null || !Model.Comments.Any() ? "block" : "none");">
+        Henüz yorum yapılmamış. İlk yorumu sen yap! 🎉
+    </p>
+</div>
+
 @section scripts {
     <script>
         $(function () {
-            var service = featureRequest.featureRequests.featureRequest;
+            var featureRequestService = featureRequest.featureRequests.featureRequest;
+            var commentService = featureRequest.featureRequests.featureRequestComment;
 
+            // === OY VERME İŞLEMİ ===
             $('#voteButton').click(function () {
                 var $button = $(this);
                 var id = $button.attr('data-id');
@@ -97,16 +151,13 @@ else
                 var $helpText = $('#voteHelpText');
                 var $icon = $button.find('i');
 
-                $button.prop('disabled', true); // Tıklamayı kilitle
+                $button.prop('disabled', true);
 
                 if (!isVoted) {
-                    // --- OY VERME İŞLEMİ ---
-                    service.upvote(id).then(function () {
-                        // UI Güncelle
+                    featureRequestService.upvote(id).then(function () {
                         var currentCount = parseInt($countSpan.text());
                         $countSpan.text(currentCount + 1);
 
-                        // Görseli Yeşil Yap
                         $button.removeClass('btn-outline-success').addClass('btn-success');
                         $button.attr('data-voted', 'true');
                         $icon.removeClass('fa-arrow-up').addClass('fa-check');
@@ -118,7 +169,7 @@ else
                     }).catch(handleError);
                 }
                 else {
-                    service.downvote(id).then(function () {
+                    featureRequestService.downvote(id).then(function () {
                         var currentCount = parseInt($countSpan.text());
                         $countSpan.text(currentCount - 1);
 
@@ -139,6 +190,75 @@ else
                     abp.notify.error('Bir hata oluştu.');
                 }
             });
+
+            // === YORUM EKLEME İŞLEMİ (AJAX) ===
+            $('#submitCommentBtn').click(function () {
+                var $button = $(this);
+                var $textarea = $('#commentText');
+                var $error = $('#commentError');
+                var commentText = $textarea.val().trim();
+                var featureRequestId = $('#featureRequestId').val();
+
+                // Validasyon
+                $error.text('');
+                if (!commentText) {
+                    $error.text('Yorum boş olamaz.');
+                    return;
+                }
+
+                $button.prop('disabled', true);
+                $button.html('<i class="fa fa-spinner fa-spin"></i> Gönderiliyor...');
+
+                commentService.create({
+                    featureRequestId: featureRequestId,
+                    commentText: commentText
+                }).then(function (result) {
+                    // Yeni yorumu listeye ekle (en üste)
+                    var now = new Date();
+                    var formattedDate = now.toLocaleDateString('tr-TR') + ' ' + now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                    
+                    var newCommentHtml = `
+                        <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 border rounded bg-white" style="animation: fadeIn 0.3s;">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1 fw-bold text-primary">
+                                    <i class="fa fa-user-circle"></i> ${abp.currentUser.userName}
+                                </h6>
+                                <small class="text-muted">${formattedDate}</small>
+                            </div>
+                            <p class="mb-1 text-dark mt-2">${commentText}</p>
+                        </div>
+                    `;
+                    
+                    $('#commentsContainer').prepend(newCommentHtml);
+                    
+                    // "Henüz yorum yok" mesajını gizle
+                    $('#noCommentsText').hide();
+                    
+                    // Yorum sayısını güncelle
+                    var currentCount = parseInt($('#commentCount').text()) || 0;
+                    $('#commentCount').text(currentCount + 1);
+                    
+                    // Formu temizle
+                    $textarea.val('');
+                    
+                    abp.notify.success('Yorumunuz eklendi! 💬');
+                    
+                    $button.prop('disabled', false);
+                    $button.html('<i class="fa fa-paper-plane"></i> Gönder');
+                }).catch(function (err) {
+                    console.error(err);
+                    $error.text('Yorum eklenirken bir hata oluştu.');
+                    $button.prop('disabled', false);
+                    $button.html('<i class="fa fa-paper-plane"></i> Gönder');
+                });
+            });
         });
     </script>
+    
+    <style>
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 }

@@ -24,15 +24,17 @@ namespace FeatureRequest.FeatureRequests
     {
         private readonly IRepository<FeatureRequestVote, Guid> _voteRepository;
         private readonly IIdentityUserRepository _userRepository;
+
         public FeatureRequestAppService(
             IRepository<Entities.FeatureRequest, Guid> repository,
             IRepository<FeatureRequestVote, Guid> voteRepository,
-            IIdentityUserRepository userRepository)
+            IIdentityUserRepository userRepository) 
             : base(repository)
         {
             _voteRepository = voteRepository;
             _userRepository = userRepository;
         }
+
 
         [Authorize]
         public override async Task<FeatureRequestDto> CreateAsync(CreateFeatureRequestDto input)
@@ -40,14 +42,18 @@ namespace FeatureRequest.FeatureRequests
             return await base.CreateAsync(input);
         }
 
-
         [Authorize]
         public override async Task<FeatureRequestDto> UpdateAsync(Guid id, UpdateFeatureRequestDto input)
         {
+            var entity = await Repository.GetAsync(id);
+            
+            if (entity.CreatorId != CurrentUser.Id)
+            {
+                throw new Volo.Abp.Authorization.AbpAuthorizationException("Bu özellik isteğini düzenleme yetkiniz yok.");
+            }
+            
             return await base.UpdateAsync(id, input);
         }
-
-
 
         [Authorize(FeatureRequestPermissions.FeatureRequests.Delete)]
         public override async Task DeleteAsync(Guid id)
@@ -55,6 +61,79 @@ namespace FeatureRequest.FeatureRequests
             await base.DeleteAsync(id);
         }
 
+
+        public override async Task<FeatureRequestDto> GetAsync(Guid id)
+        {
+            var dto = await base.GetAsync(id);
+
+            if (dto.CreatorId.HasValue)
+            {
+                var user = await _userRepository.FindAsync(dto.CreatorId.Value);
+                if (user != null) dto.CreatorUserName = user.UserName;
+            }
+
+            if (CurrentUser.Id.HasValue)
+            {
+                dto.IsVoted = await _voteRepository.AnyAsync(v =>
+                    v.FeatureRequestId == id && v.CreatorId == CurrentUser.Id);
+            }
+
+            return dto;
+        }
+
+     
+        public override async Task<PagedResultDto<FeatureRequestDto>> GetListAsync(PagedAndSortedResultRequestDto input)
+        {
+            var result = await base.GetListAsync(input);
+
+            if (CurrentUser.Id.HasValue && result.Items.Any())
+            {
+                var requestIds = result.Items.Select(x => x.Id).ToList();
+
+                var myVotes = await _voteRepository.GetListAsync(v =>
+                    requestIds.Contains(v.FeatureRequestId) && v.CreatorId == CurrentUser.Id);
+
+                foreach (var dto in result.Items)
+                {
+                    dto.IsVoted = myVotes.Any(v => v.FeatureRequestId == dto.Id);
+
+                    if (dto.CreatorId.HasValue)
+                    {
+                        var user = await _userRepository.FindAsync(dto.CreatorId.Value);
+                        if (user != null) dto.CreatorUserName = user.UserName;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        public async Task<List<FeatureRequestDto>> GetTopRequestsAsync(int count)
+        {
+            var queryable = await Repository.GetQueryableAsync();
+            var query = queryable.OrderByDescending(x => x.VoteCount).Take(count);
+            var entities = await AsyncExecuter.ToListAsync(query);
+            var dtos = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
+
+            if (CurrentUser.Id.HasValue && dtos.Any())
+            {
+                var requestIds = dtos.Select(x => x.Id).ToList();
+                var myVotes = await _voteRepository.GetListAsync(v =>
+                    requestIds.Contains(v.FeatureRequestId) && v.CreatorId == CurrentUser.Id);
+
+                foreach (var dto in dtos)
+                {
+                    dto.IsVoted = myVotes.Any(v => v.FeatureRequestId == dto.Id);
+                    if (dto.CreatorId.HasValue)
+                    {
+                        var user = await _userRepository.FindAsync(dto.CreatorId.Value);
+                        if (user != null) dto.CreatorUserName = user.UserName;
+                    }
+                }
+            }
+
+            return dtos;
+        }
 
 
         [Authorize]
@@ -86,55 +165,6 @@ namespace FeatureRequest.FeatureRequests
                 featureRequest.Downvote();
             }
             await Repository.UpdateAsync(featureRequest);
-        }
-
-        public override async Task<FeatureRequestDto> GetAsync(Guid id)
-        {
-            var dto = await base.GetAsync(id);
-
-            if (dto.CreatorId.HasValue)
-            {
-                var user = await _userRepository.FindAsync(dto.CreatorId.Value);
-
-                if (user != null)
-                {
-                    dto.CreatorUserName = user.UserName;
-                }
-            }
-
-            if (CurrentUser.Id.HasValue)
-            {
-                dto.IsVoted = await _voteRepository.AnyAsync(v =>
-                    v.FeatureRequestId == id && v.CreatorId == CurrentUser.Id);
-            }
-
-            return dto;
-        }
-        public async Task<List<FeatureRequestDto>> GetTopRequestsAsync(int count)
-        {
-            var queryable = await Repository.GetQueryableAsync();
-            var query = queryable.OrderByDescending(x => x.VoteCount).Take(count);
-            var entities = await AsyncExecuter.ToListAsync(query);
-            var dtos = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
-
-            if (CurrentUser.Id.HasValue)
-            {
-                var requestIds = dtos.Select(x => x.Id).ToList();
-                var myVotes = await _voteRepository.GetListAsync(v =>
-                    requestIds.Contains(v.FeatureRequestId) && v.CreatorId == CurrentUser.Id);
-
-                foreach (var dto in dtos)
-                {
-                    dto.IsVoted = myVotes.Any(v => v.FeatureRequestId == dto.Id);
-                    if (dto.CreatorId.HasValue)
-                    {
-                        var user = await _userRepository.FindAsync(dto.CreatorId.Value);
-                        if (user != null) dto.CreatorUserName = user.UserName;
-                    }
-                }
-            }
-
-            return dtos;
         }
     }
 }

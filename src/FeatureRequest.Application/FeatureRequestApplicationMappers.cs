@@ -1,4 +1,5 @@
-﻿using FeatureRequest.FeatureRequests;
+﻿using FeatureRequest.Entities;
+using FeatureRequest.FeatureRequests;
 using Riok.Mapperly.Abstractions;
 using Volo.Abp.Mapperly;
 
@@ -23,4 +24,19 @@ public partial class UpdateDtoToFeatureRequestMapper : MapperBase<UpdateFeatureR
 {
     public override partial Entities.FeatureRequest Map(UpdateFeatureRequestDto source);
     public override partial void Map(UpdateFeatureRequestDto source, Entities.FeatureRequest destination);
+}
+
+
+[Mapper]
+public partial class CommentToDtoMapper : MapperBase<FeatureRequestComment, FeatureRequestCommentDto>
+{
+    public override partial FeatureRequestCommentDto Map(FeatureRequestComment source);
+    public override partial void Map(FeatureRequestComment source, FeatureRequestCommentDto destination);
+}
+
+[Mapper]
+public partial class CreateCommentDtoToEntityMapper : MapperBase<CreateCommentDto, FeatureRequestComment>
+{
+    public override partial FeatureRequestComment Map(CreateCommentDto source);
+    public override partial void Map(CreateCommentDto source, FeatureRequestComment destination);
 }
