@@ -36,8 +36,8 @@
             </div>
 
             <div class="card-footer text-center py-4">
-                <button class="btn btn-success btn-lg px-5 shadow">
-                    <i class="fa fa-arrow-up"></i> Oy Ver (@Model.RequestDetail.VoteCount)
+                <button id="UpvoteButton" data-id="@Model.RequestDetail.Id" class="btn btn-success btn-lg px-5 shadow">
+                    <i class="fa fa-arrow-up"></i> Oy Ver (<span id="VoteCount">@Model.RequestDetail.VoteCount</span>)
                 </button>
             </div>
         </div>
@@ -46,4 +46,35 @@
 else
 {
     <div class="alert alert-danger">Kayıt bulunamadı!</div>
+}
+
+@section scripts {
+    <script>
+        $(function () {
+            
+            var service = featureRequest.featureRequests.featureRequest;
+
+            $('#UpvoteButton').click(function () {
+                var $button = $(this);
+                var id = $button.attr('data-id');
+                var $countSpan = $('#VoteCount');
+
+                $button.prop('disabled', true);
+
+                service.upvote(id).then(function () {
+
+                    var currentCount = parseInt($countSpan.text());
+                    $countSpan.text(currentCount + 1);
+
+                    abp.notify.success('Oyunuz başarıyla kaydedildi!');
+
+                    
+
+                }).catch(function (err) {
+                    $button.prop('disabled', false);
+                    console.error(err);
+                });
+            });
+        });
+    </script>
 }

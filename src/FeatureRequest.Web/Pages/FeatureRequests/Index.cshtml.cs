@@ -19,9 +19,7 @@ namespace FeatureRequest.Web.Pages.FeatureRequests
 
         public async Task OnGetAsync()
         {
-            var result = await _featureRequestAppService.GetListAsync(new Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto());
-
-            RequestList = (List<FeatureRequestDto>)result.Items;
+            RequestList = await _featureRequestAppService.GetTopRequestsAsync(1000);
         }
     }
 }

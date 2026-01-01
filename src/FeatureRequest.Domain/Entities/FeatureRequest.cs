@@ -13,6 +13,11 @@ namespace FeatureRequest.Entities
         public FeatureRequestStatus Status { get; set; }
         public int VoteCount { get; set; }
 
+        public void Upvote()
+        {
+            VoteCount++;
+        }
+
         public FeatureRequestCategory CategoryId { get; set; }
 
         public ICollection<FeatureRequestComment> Comments { get; set; }
