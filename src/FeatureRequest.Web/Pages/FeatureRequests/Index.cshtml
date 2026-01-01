@@ -55,7 +55,19 @@
                                 <span class="badge bg-secondary">@item.Status</span>
                             </div>
 
-                            @if (CurrentUser.IsAuthenticated)
+                            @{
+                                var isVotingClosed = item.Status == FeatureRequestStatus.Approved ||
+                                                     item.Status == FeatureRequestStatus.Completed || 
+                                                     item.Status == FeatureRequestStatus.Rejected;
+                            }
+
+                            @if (isVotingClosed)
+                            {
+                                <span class="badge bg-secondary fw-bold" style="min-width: 90px;">
+                                    <i class="fa fa-lock"></i> @item.VoteCount Oy
+                                </span>
+                            }
+                            else if (CurrentUser.IsAuthenticated)
                             {
                                 <button class="btn btn-sm fw-bold upvote-btn @(item.IsVoted ? "btn-success" : "btn-outline-success")" 
                                         data-id="@item.Id" 

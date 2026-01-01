@@ -1,5 +1,6 @@
 ﻿@page
 @using Volo.Abp.Users
+@using FeatureRequest.FeatureRequests
 @inject ICurrentUser CurrentUser
 @model FeatureRequest.Web.Pages.FeatureRequests.DetailModel
 @{
@@ -48,7 +49,21 @@
             </div>
 
             <div class="card-footer text-center py-4 bg-white border-top-0">
-                @if (CurrentUser.IsAuthenticated)
+                @{
+                    var isVotingClosed = Model.RequestDetail.Status == FeatureRequestStatus.Approved ||
+                                         Model.RequestDetail.Status == FeatureRequestStatus.Completed || 
+                                         Model.RequestDetail.Status == FeatureRequestStatus.Rejected;
+                }
+                
+                @if (isVotingClosed)
+                {
+                    <div class="text-muted">
+                        <i class="fa fa-lock"></i> Bu istek için oylama kapatılmıştır.
+                        <br/>
+                        <span class="badge bg-secondary fs-6 mt-2">@Model.RequestDetail.VoteCount Oy</span>
+                    </div>
+                }
+                else if (CurrentUser.IsAuthenticated)
                 {
                     <button id="voteButton"
                             data-id="@Model.RequestDetail.Id"
@@ -140,7 +155,6 @@ else
             var featureRequestService = featureRequest.featureRequests.featureRequest;
             var commentService = featureRequest.featureRequests.featureRequestComment;
 
-            // === OY VERME İŞLEMİ ===
             $('#voteButton').click(function () {
                 var $button = $(this);
                 var id = $button.attr('data-id');
@@ -191,7 +205,6 @@ else
                 }
             });
 
-            // === YORUM EKLEME İŞLEMİ (AJAX) ===
             $('#submitCommentBtn').click(function () {
                 var $button = $(this);
                 var $textarea = $('#commentText');
@@ -213,7 +226,6 @@ else
                     featureRequestId: featureRequestId,
                     commentText: commentText
                 }).then(function (result) {
-                    // Yeni yorumu listeye ekle (en üste)
                     var now = new Date();
                     var formattedDate = now.toLocaleDateString('tr-TR') + ' ' + now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
                     
@@ -231,14 +243,11 @@ else
                     
                     $('#commentsContainer').prepend(newCommentHtml);
                     
-                    // "Henüz yorum yok" mesajını gizle
                     $('#noCommentsText').hide();
                     
-                    // Yorum sayısını güncelle
                     var currentCount = parseInt($('#commentCount').text()) || 0;
                     $('#commentCount').text(currentCount + 1);
                     
-                    // Formu temizle
                     $textarea.val('');
                     
                     abp.notify.success('Yorumunuz eklendi! 💬');

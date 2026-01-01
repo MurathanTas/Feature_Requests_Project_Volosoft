@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FeatureRequest.Domain.Shared\FeatureRequest.Domain.Shared.csproj" />
+    <ProjectReference Include="..\FeatureRequest.Application.Contracts\FeatureRequest.Application.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

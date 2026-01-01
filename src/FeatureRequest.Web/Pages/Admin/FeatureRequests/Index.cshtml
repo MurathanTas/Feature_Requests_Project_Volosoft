@@ -1,0 +1,166 @@
+@page
+@using FeatureRequest.FeatureRequests
+@using FeatureRequest.Permissions
+@model FeatureRequest.Web.Pages.Admin.FeatureRequests.IndexModel
+@{
+    ViewData["Title"] = "Admin - Özellik İstekleri Yönetimi";
+}
+
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h1>🛠️ Özellik İstekleri Yönetimi</h1>
+        </div>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="d-flex align-items-center gap-2">
+                <label class="mb-0 fw-bold">Durum:</label>
+                <select id="statusFilter" class="form-select form-select-sm" style="width: auto;">
+                    <option value="">Tümü</option>
+                    @foreach (var status in Enum.GetValues<FeatureRequestStatus>())
+                    {
+                        <option value="@status" selected="@(Model.SelectedStatus == status)">@status</option>
+                    }
+                </select>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <label class="mb-0 fw-bold">Kategori:</label>
+                <select id="categoryFilter" class="form-select form-select-sm" style="width: auto;">
+                    <option value="">Tümü</option>
+                    @foreach (var category in Enum.GetValues<FeatureRequestCategory>())
+                    {
+                        <option value="@category" selected="@(Model.SelectedCategory == category)">@category</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        @if (Model.RequestList != null && Model.RequestList.Any())
+        {
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Başlık</th>
+                        <th>Kategori</th>
+                        <th>Durum</th>
+                        <th>Oy</th>
+                        <th>Oluşturan</th>
+                        <th>Tarih</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.RequestList)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/FeatureRequests/Detail?id=@item.Id" target="_blank">
+                                    @item.Title
+                                </a>
+                            </td>
+                            <td><span class="badge bg-info text-dark">@item.CategoryId</span></td>
+                            <td>
+                                <span class="badge @GetStatusBadgeClass(item.Status)">@item.Status</span>
+                            </td>
+                            <td><strong>@item.VoteCount</strong></td>
+                            <td>@(item.CreatorUserName ?? "Anonim")</td>
+                            <td>@item.CreationTime.ToShortDateString()</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        Durum Değiştir
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        @foreach (var status in Enum.GetValues<FeatureRequestStatus>())
+                                        {
+                                            <li>
+                                                <a class="dropdown-item status-change-btn @(item.Status == status ? "active" : "")" 
+                                                   href="#" 
+                                                   data-id="@item.Id" 
+                                                   data-status="@((int)status)"
+                                                   data-status-name="@status">
+                                                    @status
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="alert alert-info text-center">
+                <i class="fa fa-info-circle"></i> Filtrelere uygun özellik isteği bulunamadı.
+            </div>
+        }
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(FeatureRequestStatus status)
+    {
+        return status switch
+        {
+            FeatureRequestStatus.Draft => "bg-secondary",
+            FeatureRequestStatus.Pending => "bg-warning text-dark",
+            FeatureRequestStatus.Approved => "bg-success",
+            FeatureRequestStatus.Planned => "bg-primary",
+            FeatureRequestStatus.Completed => "bg-dark",
+            FeatureRequestStatus.Rejected => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}
+
+@section scripts {
+    <script>
+        $(function () {
+            var service = featureRequest.featureRequests.featureRequest;
+
+            // Filtre değişikliklerini dinle
+            $('#statusFilter, #categoryFilter').change(function () {
+                var status = $('#statusFilter').val();
+                var category = $('#categoryFilter').val();
+                var url = '/Admin/FeatureRequests';
+                var params = [];
+                
+                if (status) params.push('SelectedStatus=' + status);
+                if (category) params.push('SelectedCategory=' + category);
+                
+                if (params.length > 0) {
+                    url += '?' + params.join('&');
+                }
+                
+                window.location.href = url;
+            });
+
+            // Durum değiştirme
+            $('.status-change-btn').click(function (e) {
+                e.preventDefault();
+                var $link = $(this);
+                var id = $link.data('id');
+                var status = $link.data('status');
+                var statusName = $link.data('status-name');
+
+                abp.message.confirm(
+                    'Durumu "' + statusName + '" olarak değiştirmek istediğinize emin misiniz?',
+                    'Durum Değiştir'
+                ).then(function (confirmed) {
+                    if (confirmed) {
+                        service.updateStatus(id, status).then(function () {
+                            abp.notify.success('Durum başarıyla güncellendi!');
+                            location.reload();
+                        }).catch(function (err) {
+                            console.error(err);
+                            abp.notify.error('Bir hata oluştu.');
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

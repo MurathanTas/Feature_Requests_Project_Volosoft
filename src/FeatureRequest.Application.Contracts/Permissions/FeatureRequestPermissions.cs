@@ -12,6 +12,7 @@ public static class FeatureRequestPermissions
         public const string Default = GroupName + ".FeatureRequests";
         public const string Create = Default + ".Create";
         public const string Edit = Default + ".Edit";
-        public const string Delete = Default + ".Delete"; 
+        public const string Delete = Default + ".Delete";
+        public const string UpdateStatus = Default + ".UpdateStatus";
     }
 }

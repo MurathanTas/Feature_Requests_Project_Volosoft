@@ -1,0 +1,34 @@
+using FeatureRequest.FeatureRequests;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using FeatureRequest.Permissions;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace FeatureRequest.Web.Pages.Admin.FeatureRequests
+{
+    [Authorize(FeatureRequestPermissions.FeatureRequests.UpdateStatus)]
+    public class IndexModel : PageModel
+    {
+        private readonly IFeatureRequestAppService _featureRequestAppService;
+
+        public List<FeatureRequestDto> RequestList { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public FeatureRequestStatus? SelectedStatus { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public FeatureRequestCategory? SelectedCategory { get; set; }
+
+        public IndexModel(IFeatureRequestAppService featureRequestAppService)
+        {
+            _featureRequestAppService = featureRequestAppService;
+        }
+
+        public async Task OnGetAsync()
+        {
+            RequestList = await _featureRequestAppService.GetFilteredListAsync(SelectedStatus, SelectedCategory);
+        }
+    }
+}

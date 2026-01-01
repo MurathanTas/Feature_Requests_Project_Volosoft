@@ -159,9 +159,21 @@ namespace FeatureRequest.FeatureRequests
 
         private async Task UpdateVoteAsync(Guid id)
         {
+            var featureRequest = await Repository.GetAsync(id);
+            
+            // Onaylanmış, tamamlanmış veya reddedilmiş isteklere oy verilemez
+            var nonVotableStatuses = new[] { 
+                FeatureRequestStatus.Approved, 
+                FeatureRequestStatus.Completed, 
+                FeatureRequestStatus.Rejected 
+            };
+            if (nonVotableStatuses.Contains(featureRequest.Status))
+            {
+                throw new Volo.Abp.UserFriendlyException("Bu özellik isteği artık oylamaya kapalı.");
+            }
+            
             var existingVote = await _voteRepository.FirstOrDefaultAsync(v =>
                 v.FeatureRequestId == id && v.CreatorId == CurrentUser.Id);
-            var featureRequest = await Repository.GetAsync(id);
 
             if (existingVote == null)
             {
@@ -174,6 +186,99 @@ namespace FeatureRequest.FeatureRequests
                 featureRequest.Downvote();
             }
             await Repository.UpdateAsync(featureRequest);
+        }
+
+        [Authorize(FeatureRequestPermissions.FeatureRequests.UpdateStatus)]
+        public async Task UpdateStatusAsync(Guid id, FeatureRequestStatus status)
+        {
+            var entity = await Repository.GetAsync(id);
+            entity.Status = status;
+            await Repository.UpdateAsync(entity);
+        }
+
+        [Authorize(FeatureRequestPermissions.FeatureRequests.UpdateStatus)]
+        public async Task<List<FeatureRequestDto>> GetFilteredListAsync(FeatureRequestStatus? status, FeatureRequestCategory? category)
+        {
+            var queryable = await Repository.GetQueryableAsync();
+
+            if (status.HasValue)
+            {
+                queryable = queryable.Where(x => x.Status == status.Value);
+            }
+
+            if (category.HasValue)
+            {
+                queryable = queryable.Where(x => x.CategoryId == category.Value);
+            }
+
+            var query = queryable
+                .OrderByDescending(x => x.VoteCount)
+                .ThenByDescending(x => x.CreationTime);
+
+            var entities = await AsyncExecuter.ToListAsync(query);
+            var dtos = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
+
+            foreach (var dto in dtos)
+            {
+                if (dto.CreatorId.HasValue)
+                {
+                    var user = await _userRepository.FindAsync(dto.CreatorId.Value);
+                    if (user != null) dto.CreatorUserName = user.UserName;
+                }
+            }
+
+            return dtos;
+        }
+
+        [Authorize]
+        public async Task<List<FeatureRequestDto>> GetMyRequestsAsync()
+        {
+            var queryable = await Repository.GetQueryableAsync();
+            var query = queryable
+                .Where(x => x.CreatorId == CurrentUser.Id)
+                .OrderByDescending(x => x.CreationTime);
+
+            var entities = await AsyncExecuter.ToListAsync(query);
+            var dtos = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
+
+            var requestIds = dtos.Select(x => x.Id).ToList();
+            var myVotes = await _voteRepository.GetListAsync(v =>
+                requestIds.Contains(v.FeatureRequestId) && v.CreatorId == CurrentUser.Id);
+
+            foreach (var dto in dtos)
+            {
+                dto.IsVoted = myVotes.Any(v => v.FeatureRequestId == dto.Id);
+            }
+
+            return dtos;
+        }
+
+        [Authorize]
+        public async Task<List<FeatureRequestDto>> GetMyVotedRequestsAsync()
+        {
+            var myVotes = await _voteRepository.GetListAsync(v => v.CreatorId == CurrentUser.Id);
+            var votedRequestIds = myVotes.Select(v => v.FeatureRequestId).ToList();
+
+            var queryable = await Repository.GetQueryableAsync();
+            var query = queryable
+                .Where(x => votedRequestIds.Contains(x.Id))
+                .OrderByDescending(x => x.VoteCount)
+                .ThenByDescending(x => x.CreationTime);
+
+            var entities = await AsyncExecuter.ToListAsync(query);
+            var dtos = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
+
+            foreach (var dto in dtos)
+            {
+                dto.IsVoted = true;
+                if (dto.CreatorId.HasValue)
+                {
+                    var user = await _userRepository.FindAsync(dto.CreatorId.Value);
+                    if (user != null) dto.CreatorUserName = user.UserName;
+                }
+            }
+
+            return dtos;
         }
     }
 }

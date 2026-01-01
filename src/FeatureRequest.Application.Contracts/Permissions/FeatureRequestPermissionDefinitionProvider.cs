@@ -15,6 +15,7 @@ namespace FeatureRequest.Permissions
             featureRequestsPermission.AddChild(FeatureRequestPermissions.FeatureRequests.Create, L("Permission:FeatureRequests.Create"));
             featureRequestsPermission.AddChild(FeatureRequestPermissions.FeatureRequests.Edit, L("Permission:FeatureRequests.Edit"));
             featureRequestsPermission.AddChild(FeatureRequestPermissions.FeatureRequests.Delete, L("Permission:FeatureRequests.Delete"));
+            featureRequestsPermission.AddChild(FeatureRequestPermissions.FeatureRequests.UpdateStatus, L("Permission:FeatureRequests.UpdateStatus"));
         }
 
         private static LocalizableString L(string name)
