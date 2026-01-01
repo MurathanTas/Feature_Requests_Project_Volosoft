@@ -1,4 +1,6 @@
 ﻿@page
+@using Volo.Abp.Users
+@inject ICurrentUser CurrentUser
 @model FeatureRequest.Web.Pages.FeatureRequests.DetailModel
 @{
     ViewData["Title"] = Model.RequestDetail?.Title;
@@ -13,67 +15,129 @@
                 <i class="fa fa-arrow-left"></i> Listeye Dön
             </a>
 
-            <a href="/FeatureRequests/Edit?id=@Model.RequestDetail.Id" class="btn btn-warning">
-                <i class="fa fa-edit"></i> Düzenle
-            </a>
+            @if (CurrentUser.IsAuthenticated)
+            {
+                <a href="/FeatureRequests/Edit?id=@Model.RequestDetail.Id" class="btn btn-warning shadow-sm">
+                    <i class="fa fa-edit"></i> Düzenle
+                </a>
+            }
         </div>
 
-        <div class="card shadow-lg">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
                 <span class="badge bg-info text-dark fs-6">@Model.RequestDetail.CategoryId</span>
                 <span class="badge bg-secondary fs-6">@Model.RequestDetail.Status</span>
             </div>
 
-            <div class="card-body">
-                <h2 class="card-title text-primary mb-3">@Model.RequestDetail.Title</h2>
+            <div class="card-body p-4">
+                <h2 class="card-title text-primary mb-3 fw-bold">@Model.RequestDetail.Title</h2>
                 <hr />
-                <p class="card-text fs-5" style="white-space: pre-wrap;">@Model.RequestDetail.Description</p>
+                <p class="card-text fs-5 text-dark" style="white-space: pre-wrap; line-height: 1.6;">@Model.RequestDetail.Description</p>
 
-                <div class="mt-4 text-muted small">
-                    <i class="fa fa-user"></i> Oluşturan: @Model.RequestDetail.CreatorUserName <br />
-                    <i class="fa fa-calendar"></i> Tarih: @Model.RequestDetail.CreationTime.ToString("f")
+                <div class="mt-4 p-3 bg-light rounded border">
+                    <div class="row text-muted small">
+                        <div class="col-md-6">
+                            <i class="fa fa-user me-1"></i> Oluşturan:
+                            <strong>@(string.IsNullOrEmpty(Model.RequestDetail.CreatorUserName) ? "Anonim" : Model.RequestDetail.CreatorUserName)</strong>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <i class="fa fa-calendar me-1"></i> Tarih: @Model.RequestDetail.CreationTime.ToString("f")
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="card-footer text-center py-4">
-                <button id="UpvoteButton" data-id="@Model.RequestDetail.Id" class="btn btn-success btn-lg px-5 shadow">
-                    <i class="fa fa-arrow-up"></i> Oy Ver (<span id="VoteCount">@Model.RequestDetail.VoteCount</span>)
-                </button>
+            <div class="card-footer text-center py-4 bg-white border-top-0">
+                @if (CurrentUser.IsAuthenticated)
+                {
+                    <button id="voteButton"
+                            data-id="@Model.RequestDetail.Id"
+                            data-voted="@Model.RequestDetail.IsVoted.ToString().ToLower()"
+                            class="btn btn-lg px-5 shadow transition-btn @(Model.RequestDetail.IsVoted ? "btn-success" : "btn-outline-success")"
+                            style="min-width: 200px;">
+
+                        <i class="fa @(Model.RequestDetail.IsVoted ? "fa-check" : "fa-arrow-up")"></i>
+                        <span id="voteText">@(Model.RequestDetail.IsVoted ? "Oy Verildi" : "Oy Ver")</span>
+                        (<span id="VoteCount">@Model.RequestDetail.VoteCount</span>)
+                    </button>
+
+                    <div class="mt-2 text-muted small fst-italic" id="voteHelpText">
+                        @(Model.RequestDetail.IsVoted ? "Oyunuzu geri çekmek için tıklayın" : "Desteklemek için tıklayın")
+                    </div>
+                }
+                else
+                {
+                    <a href="/Account/Login" class="btn btn-outline-primary btn-lg px-5 shadow">
+                        <i class="fa fa-lock"></i> Oy Vermek İçin Giriş Yapın
+                    </a>
+                }
             </div>
         </div>
     </div>
 }
 else
 {
-    <div class="alert alert-danger">Kayıt bulunamadı!</div>
+    <div class="alert alert-danger shadow-sm">
+        <i class="fa fa-exclamation-triangle"></i> Kayıt bulunamadı!
+    </div>
 }
 
 @section scripts {
     <script>
         $(function () {
-            
             var service = featureRequest.featureRequests.featureRequest;
 
-            $('#UpvoteButton').click(function () {
+            $('#voteButton').click(function () {
                 var $button = $(this);
                 var id = $button.attr('data-id');
+                var isVoted = $button.attr('data-voted') === 'true'; 
+
                 var $countSpan = $('#VoteCount');
+                var $textSpan = $('#voteText');
+                var $helpText = $('#voteHelpText');
+                var $icon = $button.find('i');
 
-                $button.prop('disabled', true);
+                $button.prop('disabled', true); // Tıklamayı kilitle
 
-                service.upvote(id).then(function () {
+                if (!isVoted) {
+                    // --- OY VERME İŞLEMİ ---
+                    service.upvote(id).then(function () {
+                        // UI Güncelle
+                        var currentCount = parseInt($countSpan.text());
+                        $countSpan.text(currentCount + 1);
 
-                    var currentCount = parseInt($countSpan.text());
-                    $countSpan.text(currentCount + 1);
+                        // Görseli Yeşil Yap
+                        $button.removeClass('btn-outline-success').addClass('btn-success');
+                        $button.attr('data-voted', 'true');
+                        $icon.removeClass('fa-arrow-up').addClass('fa-check');
+                        $textSpan.text("Oy Verildi");
+                        $helpText.text("Oyunuzu geri çekmek için tıklayın");
 
-                    abp.notify.success('Oyunuz başarıyla kaydedildi!');
+                        abp.notify.success('Oyunuz başarıyla kaydedildi!');
+                        $button.prop('disabled', false);
+                    }).catch(handleError);
+                }
+                else {
+                    service.downvote(id).then(function () {
+                        var currentCount = parseInt($countSpan.text());
+                        $countSpan.text(currentCount - 1);
 
-                    
+                        $button.removeClass('btn-success').addClass('btn-outline-success');
+                        $button.attr('data-voted', 'false');
+                        $icon.removeClass('fa-check').addClass('fa-arrow-up');
+                        $textSpan.text("Oy Ver");
+                        $helpText.text("Desteklemek için tıklayın");
 
-                }).catch(function (err) {
+                        abp.notify.info('Oyunuz geri çekildi.');
+                        $button.prop('disabled', false);
+                    }).catch(handleError);
+                }
+
+                function handleError(err) {
                     $button.prop('disabled', false);
                     console.error(err);
-                });
+                    abp.notify.error('Bir hata oluştu.');
+                }
             });
         });
     </script>

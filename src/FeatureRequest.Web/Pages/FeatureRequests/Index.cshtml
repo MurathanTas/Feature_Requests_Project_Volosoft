@@ -1,6 +1,8 @@
 ﻿@page
 @using FeatureRequest.Web.Pages.FeatureRequests
 @using FeatureRequest.FeatureRequests
+@using Volo.Abp.Users  @* YENİ EKLENDİ *@
+@inject ICurrentUser CurrentUser
 @model IndexModel
 @{
     ViewData["Title"] = "Özellik İstekleri";
@@ -41,10 +43,22 @@
                                 <span class="badge bg-secondary">@item.Status</span>
                             </div>
 
-                            <button class="btn btn-outline-success btn-sm fw-bold upvote-btn" data-id="@item.Id" style="min-width: 80px;">
-                                <i class="fa fa-arrow-up"></i>
-                                <span class="vote-count">@item.VoteCount</span> Oy
-                            </button>
+                            @if (CurrentUser.IsAuthenticated)
+                            {
+                                <button class="btn btn-sm fw-bold upvote-btn @(item.IsVoted ? "btn-success" : "btn-outline-success")" 
+                                        data-id="@item.Id" 
+                                        data-voted="@item.IsVoted.ToString().ToLower()"
+                                        style="min-width: 90px;">
+                                    <i class="fa @(item.IsVoted ? "fa-check" : "fa-arrow-up")"></i>
+                                    <span class="vote-count">@item.VoteCount</span> Oy
+                                </button>
+                            }
+                            else
+                            {
+                                <a href="/Account/Login" class="btn btn-sm btn-outline-secondary fw-bold" style="min-width: 90px;">
+                                    <i class="fa fa-arrow-up"></i> @item.VoteCount Oy
+                                </a>
+                            }
                         </div>
                     </div>
                 }
@@ -62,14 +76,9 @@
 @section scripts {
     <script type="module">
         import autoAnimate from 'https://cdn.jsdelivr.net/npm/@@formkit/auto-animate/index.mjs';
-
-        // Listeyi bul ve animasyonu başlat
         const list = document.getElementById('RequestListContainer');
         if (list) {
-            autoAnimate(list, {
-                duration: 600,
-                easing: 'ease-in-out'
-            });
+            autoAnimate(list);
         }
     </script>
 
@@ -77,59 +86,47 @@
         $(function () {
             var service = featureRequest.featureRequests.featureRequest;
 
-            function reorderItems() {
-                var $container = $('#RequestListContainer');
-                var $items = $container.children('.list-group-item');
-
-                $items.sort(function (a, b) {
-                    var voteA = parseInt($(a).find('.vote-count').text());
-                    var voteB = parseInt($(b).find('.vote-count').text());
-                    return voteB - voteA; 
-                });
-
-                
-                $items.detach().appendTo($container);
-            }
-
             $('.upvote-btn').click(function (e) {
                 e.preventDefault();
                 var $button = $(this);
                 var id = $button.attr('data-id');
+                var isVoted = $button.attr('data-voted') === 'true';
                 var $countSpan = $button.find('.vote-count');
-                var isVoted = $button.hasClass('btn-success');
+                var $icon = $button.find('i');
 
-                $button.prop('disabled', true); 
+                $button.prop('disabled', true);
 
                 if (!isVoted) {
                     service.upvote(id).then(function () {
                         var currentCount = parseInt($countSpan.text());
                         $countSpan.text(currentCount + 1);
-
-                        $button.removeClass('btn-outline-success').addClass('btn-success text-white');
-                        abp.notify.success('Oy verildi +1');
-
-                        reorderItems();
-
+                        
+                        $button.removeClass('btn-outline-success').addClass('btn-success');
+                        $button.attr('data-voted', 'true');
+                        $icon.removeClass('fa-arrow-up').addClass('fa-check');
+                        
+                        abp.notify.success('Oy verildi! 🚀');
                         $button.prop('disabled', false);
-                    }).catch(handleError);
-                }
+                    }).catch(function(err){
+                         $button.prop('disabled', false);
+                         abp.notify.error('Bir hata oluştu.');
+                    });
+                } 
                 else {
                     service.downvote(id).then(function () {
                         var currentCount = parseInt($countSpan.text());
                         $countSpan.text(currentCount - 1);
 
-                        $button.removeClass('btn-success text-white').addClass('btn-outline-success');
-                        abp.notify.info('Oy geri çekildi');
+                        $button.removeClass('btn-success').addClass('btn-outline-success');
+                        $button.attr('data-voted', 'false');
+                        $icon.removeClass('fa-check').addClass('fa-arrow-up');
 
-                        reorderItems();
-
+                        abp.notify.info('Oy geri çekildi.');
                         $button.prop('disabled', false);
-                    }).catch(handleError);
-                }
-
-                function handleError(err) {
-                    $button.prop('disabled', false);
-                    console.error(err);
+                    }).catch(function(err){
+                         $button.prop('disabled', false);
+                         abp.notify.error('Bir hata oluştu.');
+                    });
                 }
             });
         });

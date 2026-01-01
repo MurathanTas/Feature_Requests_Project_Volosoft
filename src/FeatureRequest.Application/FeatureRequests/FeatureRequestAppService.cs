@@ -102,6 +102,12 @@ namespace FeatureRequest.FeatureRequests
                 }
             }
 
+            if (CurrentUser.Id.HasValue)
+            {
+                dto.IsVoted = await _voteRepository.AnyAsync(v =>
+                    v.FeatureRequestId == id && v.CreatorId == CurrentUser.Id);
+            }
+
             return dto;
         }
         public async Task<List<FeatureRequestDto>> GetTopRequestsAsync(int count)
@@ -109,7 +115,26 @@ namespace FeatureRequest.FeatureRequests
             var queryable = await Repository.GetQueryableAsync();
             var query = queryable.OrderByDescending(x => x.VoteCount).Take(count);
             var entities = await AsyncExecuter.ToListAsync(query);
-            return ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
+            var dtos = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
+
+            if (CurrentUser.Id.HasValue)
+            {
+                var requestIds = dtos.Select(x => x.Id).ToList();
+                var myVotes = await _voteRepository.GetListAsync(v =>
+                    requestIds.Contains(v.FeatureRequestId) && v.CreatorId == CurrentUser.Id);
+
+                foreach (var dto in dtos)
+                {
+                    dto.IsVoted = myVotes.Any(v => v.FeatureRequestId == dto.Id);
+                    if (dto.CreatorId.HasValue)
+                    {
+                        var user = await _userRepository.FindAsync(dto.CreatorId.Value);
+                        if (user != null) dto.CreatorUserName = user.UserName;
+                    }
+                }
+            }
+
+            return dtos;
         }
     }
 }

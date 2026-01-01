@@ -13,5 +13,6 @@ namespace FeatureRequest.FeatureRequests
         public FeatureRequestCategory CategoryId { get; set; }
         public int VoteCount { get; set; }
         public string CreatorUserName { get; set; }
+        public bool IsVoted { get; set; }
     }
 }
