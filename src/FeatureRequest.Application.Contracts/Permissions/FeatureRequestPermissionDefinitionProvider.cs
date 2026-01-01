@@ -2,19 +2,24 @@
 using Volo.Abp.Authorization.Permissions;
 using Volo.Abp.Localization;
 
-namespace FeatureRequest.Permissions;
-
-public class FeatureRequestPermissionDefinitionProvider : PermissionDefinitionProvider
+namespace FeatureRequest.Permissions
 {
-    public override void Define(IPermissionDefinitionContext context)
+    public class FeatureRequestPermissionDefinitionProvider : PermissionDefinitionProvider
     {
-        var myGroup = context.AddGroup(FeatureRequestPermissions.GroupName);
-        //Define your own permissions here. Example:
-        //myGroup.AddPermission(FeatureRequestPermissions.MyPermission1, L("Permission:MyPermission1"));
-    }
+        public override void Define(IPermissionDefinitionContext context)
+        {
+            var myGroup = context.AddGroup(FeatureRequestPermissions.GroupName, L("Permission:FeatureRequest"));
 
-    private static LocalizableString L(string name)
-    {
-        return LocalizableString.Create<FeatureRequestResource>(name);
+            var featureRequestsPermission = myGroup.AddPermission(FeatureRequestPermissions.FeatureRequests.Default, L("Permission:FeatureRequests"));
+
+            featureRequestsPermission.AddChild(FeatureRequestPermissions.FeatureRequests.Create, L("Permission:FeatureRequests.Create"));
+            featureRequestsPermission.AddChild(FeatureRequestPermissions.FeatureRequests.Edit, L("Permission:FeatureRequests.Edit"));
+            featureRequestsPermission.AddChild(FeatureRequestPermissions.FeatureRequests.Delete, L("Permission:FeatureRequests.Delete"));
+        }
+
+        private static LocalizableString L(string name)
+        {
+            return LocalizableString.Create<FeatureRequestResource>(name);
+        }
     }
 }

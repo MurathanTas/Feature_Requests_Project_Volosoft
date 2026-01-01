@@ -1,13 +1,14 @@
 ﻿using FeatureRequest.Entities;
+using FeatureRequest.Permissions;
+using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Identity;
 
 namespace FeatureRequest.FeatureRequests
 {
@@ -22,18 +23,47 @@ namespace FeatureRequest.FeatureRequests
         IFeatureRequestAppService
     {
         private readonly IRepository<FeatureRequestVote, Guid> _voteRepository;
-
-        public FeatureRequestAppService(IRepository<Entities.FeatureRequest, Guid> repository, IRepository<FeatureRequestVote, Guid> voteRepository)
+        private readonly IIdentityUserRepository _userRepository;
+        public FeatureRequestAppService(
+            IRepository<Entities.FeatureRequest, Guid> repository,
+            IRepository<FeatureRequestVote, Guid> voteRepository,
+            IIdentityUserRepository userRepository)
             : base(repository)
         {
             _voteRepository = voteRepository;
+            _userRepository = userRepository;
         }
 
+        [Authorize]
+        public override async Task<FeatureRequestDto> CreateAsync(CreateFeatureRequestDto input)
+        {
+            return await base.CreateAsync(input);
+        }
+
+
+        [Authorize]
+        public override async Task<FeatureRequestDto> UpdateAsync(Guid id, UpdateFeatureRequestDto input)
+        {
+            return await base.UpdateAsync(id, input);
+        }
+
+
+
+        [Authorize(FeatureRequestPermissions.FeatureRequests.Delete)]
+        public override async Task DeleteAsync(Guid id)
+        {
+            await base.DeleteAsync(id);
+        }
+
+
+
+        [Authorize]
         public async Task UpvoteAsync(Guid id)
         {
             await UpdateVoteAsync(id);
         }
 
+        [Authorize]
         public async Task DownvoteAsync(Guid id)
         {
             await UpdateVoteAsync(id);
@@ -41,50 +71,45 @@ namespace FeatureRequest.FeatureRequests
 
         private async Task UpdateVoteAsync(Guid id)
         {
-            if (CurrentUser.Id == null)
-            {
-                throw new UserFriendlyException("Oy vermek için giriş yapmalısınız!");
-            }
-
             var existingVote = await _voteRepository.FirstOrDefaultAsync(v =>
                 v.FeatureRequestId == id && v.CreatorId == CurrentUser.Id);
-
             var featureRequest = await Repository.GetAsync(id);
 
             if (existingVote == null)
             {
-
-                await _voteRepository.InsertAsync(new FeatureRequestVote
-                {
-                    FeatureRequestId = id
-                });
-
+                await _voteRepository.InsertAsync(new FeatureRequestVote { FeatureRequestId = id });
                 featureRequest.Upvote();
             }
             else
             {
-
                 await _voteRepository.DeleteAsync(existingVote);
-
                 featureRequest.Downvote();
             }
-
             await Repository.UpdateAsync(featureRequest);
         }
 
+        public override async Task<FeatureRequestDto> GetAsync(Guid id)
+        {
+            var dto = await base.GetAsync(id);
+
+            if (dto.CreatorId.HasValue)
+            {
+                var user = await _userRepository.FindAsync(dto.CreatorId.Value);
+
+                if (user != null)
+                {
+                    dto.CreatorUserName = user.UserName;
+                }
+            }
+
+            return dto;
+        }
         public async Task<List<FeatureRequestDto>> GetTopRequestsAsync(int count)
         {
             var queryable = await Repository.GetQueryableAsync();
-
-            var query = queryable
-                         .OrderByDescending(x => x.VoteCount)
-                         .Take(count);
-
+            var query = queryable.OrderByDescending(x => x.VoteCount).Take(count);
             var entities = await AsyncExecuter.ToListAsync(query);
-
             return ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
         }
-
-       
     }
 }

@@ -12,5 +12,6 @@ namespace FeatureRequest.FeatureRequests
         public FeatureRequestStatus Status { get; set; }
         public FeatureRequestCategory CategoryId { get; set; }
         public int VoteCount { get; set; }
+        public string CreatorUserName { get; set; }
     }
 }
