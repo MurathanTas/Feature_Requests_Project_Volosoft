@@ -1,14 +1,17 @@
 @page
 @using FeatureRequest.FeatureRequests
+@using FeatureRequest.Localization
+@using Microsoft.AspNetCore.Mvc.Localization
 @using System.Text.Json
+@inject IHtmlLocalizer<FeatureRequestResource> L
 @model FeatureRequest.Web.Pages.FeatureRequests.DashboardModel
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = L["DashboardPage:Title"];
 }
 
 <abp-card>
     <abp-card-header>
-        <abp-card-title>📊 Dashboard</abp-card-title>
+        <abp-card-title>@L["DashboardPage:Header"]</abp-card-title>
     </abp-card-header>
 </abp-card>
 
@@ -17,7 +20,7 @@
         <abp-card class="bg-primary text-white shadow">
             <abp-card-body class="text-center">
                 <h2 class="display-4 fw-bold">@Model.Statistics.TotalRequests</h2>
-                <p class="mb-0"><i class="fa fa-lightbulb"></i> Toplam İstek</p>
+                <p class="mb-0"><i class="fa fa-lightbulb"></i> @L["DashboardPage:TotalRequests"]</p>
             </abp-card-body>
         </abp-card>
     </abp-column>
@@ -25,7 +28,7 @@
         <abp-card class="bg-success text-white shadow">
             <abp-card-body class="text-center">
                 <h2 class="display-4 fw-bold">@Model.Statistics.TotalVotes</h2>
-                <p class="mb-0"><i class="fa fa-arrow-up"></i> Toplam Oy</p>
+                <p class="mb-0"><i class="fa fa-arrow-up"></i> @L["DashboardPage:TotalVotes"]</p>
             </abp-card-body>
         </abp-card>
     </abp-column>
@@ -33,7 +36,7 @@
         <abp-card class="bg-info text-white shadow">
             <abp-card-body class="text-center">
                 <h2 class="display-4 fw-bold">@Model.Statistics.TotalComments</h2>
-                <p class="mb-0"><i class="fa fa-comment"></i> Toplam Yorum</p>
+                <p class="mb-0"><i class="fa fa-comment"></i> @L["DashboardPage:TotalComments"]</p>
             </abp-card-body>
         </abp-card>
     </abp-column>
@@ -46,7 +49,7 @@
                         : 0;
                 }
                 <h2 class="display-4 fw-bold">@avgVotes.ToString("F1")</h2>
-                <p class="mb-0"><i class="fa fa-chart-line"></i> Ortalama Oy</p>
+                <p class="mb-0"><i class="fa fa-chart-line"></i> @L["DashboardPage:AverageVotes"]</p>
             </abp-card-body>
         </abp-card>
     </abp-column>
@@ -56,7 +59,7 @@
     <abp-column size-md="_6">
         <abp-card class="shadow">
             <abp-card-header>
-                <abp-card-title><i class="fa fa-folder"></i> Kategoriye Göre İstekler</abp-card-title>
+                <abp-card-title><i class="fa fa-folder"></i> @L["DashboardPage:RequestsByCategory"]</abp-card-title>
             </abp-card-header>
             <abp-card-body>
                 <canvas id="categoryChart" height="250"></canvas>
@@ -66,7 +69,7 @@
     <abp-column size-md="_6">
         <abp-card class="shadow">
             <abp-card-header>
-                <abp-card-title><i class="fa fa-tasks"></i> Duruma Göre Dağılım</abp-card-title>
+                <abp-card-title><i class="fa fa-tasks"></i> @L["DashboardPage:DistributionByStatus"]</abp-card-title>
             </abp-card-header>
             <abp-card-body>
                 <canvas id="statusChart" height="250"></canvas>
@@ -79,7 +82,7 @@
     <abp-column size-md="_6">
         <abp-card class="shadow">
             <abp-card-header>
-                <abp-card-title><i class="fa fa-star"></i> Kategoriye Göre Toplam Oylar</abp-card-title>
+                <abp-card-title><i class="fa fa-star"></i> @L["DashboardPage:VotesByCategory"]</abp-card-title>
             </abp-card-header>
             <abp-card-body>
                 <canvas id="categoryVotesChart" height="250"></canvas>
@@ -89,7 +92,7 @@
     <abp-column size-md="_6">
         <abp-card class="shadow">
             <abp-card-header>
-                <abp-card-title><i class="fa fa-trophy"></i> En Çok Oy Alan İstekler</abp-card-title>
+                <abp-card-title><i class="fa fa-trophy"></i> @L["DashboardPage:TopVoted"]</abp-card-title>
             </abp-card-header>
             <abp-card-body>
                 @if (Model.Statistics.TopVotedRequests.Any())
@@ -97,9 +100,9 @@
                     <abp-table striped-rows="true">
                         <thead>
                             <tr>
-                                <th>Başlık</th>
-                                <th>Kategori</th>
-                                <th>Oy</th>
+                                <th>@L["DashboardPage:TableTitle"]</th>
+                                <th>@L["DashboardPage:TableCategory"]</th>
+                                <th>@L["DashboardPage:TableVote"]</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -118,7 +121,7 @@
                 }
                 else
                 {
-                    <p class="text-muted text-center">Henüz veri yok.</p>
+                    <p class="text-muted text-center">@L["DashboardPage:NoData"]</p>
                 }
             </abp-card-body>
         </abp-card>
@@ -148,7 +151,7 @@
                 data: {
                     labels: categoryLabels,
                     datasets: [{
-                        label: 'İstek Sayısı',
+                        label: '@L["DashboardPage:ChartRequestCount"]',
                         data: categoryData,
                         backgroundColor: colors,
                         borderWidth: 1
@@ -178,7 +181,7 @@
                 data: {
                     labels: categoryLabels,
                     datasets: [{
-                        label: 'Toplam Oy',
+                        label: '@L["DashboardPage:ChartTotalVotes"]',
                         data: categoryVotes,
                         backgroundColor: 'rgba(40, 167, 69, 0.8)',
                         borderWidth: 1

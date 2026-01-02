@@ -1,7 +1,10 @@
 ﻿@page
 @using Volo.Abp.Users
 @using FeatureRequest.FeatureRequests
+@using FeatureRequest.Localization
+@using Microsoft.AspNetCore.Mvc.Localization
 @inject ICurrentUser CurrentUser
+@inject IHtmlLocalizer<FeatureRequestResource> L
 @model FeatureRequest.Web.Pages.FeatureRequests.DetailModel
 @{
     ViewData["Title"] = Model.RequestDetail?.Title;
@@ -12,14 +15,14 @@
     <abp-row class="mb-3">
         <abp-column size-md="_6">
             <a href="/FeatureRequests" class="btn btn-outline-secondary">
-                <i class="fa fa-arrow-left"></i> Listeye Dön
+                <i class="fa fa-arrow-left"></i> @L["DetailPage:BackToList"]
             </a>
         </abp-column>
         <abp-column size-md="_6" class="text-end">
             @if (CurrentUser.IsAuthenticated && CurrentUser.Id == Model.RequestDetail.CreatorId)
             {
                 <a href="/FeatureRequests/Edit?id=@Model.RequestDetail.Id" class="btn btn-warning shadow-sm">
-                    <i class="fa fa-edit"></i> Düzenle
+                    <i class="fa fa-edit"></i> @L["DetailPage:Edit"]
                 </a>
             }
         </abp-column>
@@ -45,11 +48,11 @@
             <div class="mt-4 p-3 bg-light rounded border">
                 <abp-row class="text-muted small">
                     <abp-column size-md="_6">
-                        <i class="fa fa-user me-1"></i> Oluşturan:
-                        <strong>@(string.IsNullOrEmpty(Model.RequestDetail.CreatorUserName) ? "Anonim" : Model.RequestDetail.CreatorUserName)</strong>
+                        <i class="fa fa-user me-1"></i> @L["DetailPage:CreatedBy"]
+                        <strong>@(string.IsNullOrEmpty(Model.RequestDetail.CreatorUserName) ? L["DetailPage:Anonymous"].Value : Model.RequestDetail.CreatorUserName)</strong>
                     </abp-column>
                     <abp-column size-md="_6" class="text-md-end">
-                        <i class="fa fa-calendar me-1"></i> Tarih: @Model.RequestDetail.CreationTime.ToString("f")
+                        <i class="fa fa-calendar me-1"></i> @L["DetailPage:Date"] @Model.RequestDetail.CreationTime.ToString("f")
                     </abp-column>
                 </abp-row>
             </div>
@@ -65,9 +68,9 @@
             @if (isVotingClosed)
             {
                 <div class="text-muted">
-                    <i class="fa fa-lock"></i> Bu istek için oylama kapatılmıştır.
+                    <i class="fa fa-lock"></i> @L["DetailPage:VotingClosed"]
                     <br/>
-                    <span class="badge bg-secondary fs-6 mt-2">@Model.RequestDetail.VoteCount Oy</span>
+                    <span class="badge bg-secondary fs-6 mt-2">@Model.RequestDetail.VoteCount @L["DetailPage:VoteCount"]</span>
                 </div>
             }
             else if (CurrentUser.IsAuthenticated)
@@ -78,18 +81,18 @@
                         class="btn btn-lg px-5 shadow transition-btn @(Model.RequestDetail.IsVoted ? "btn-success" : "btn-outline-success")"
                         style="min-width: 200px;">
                     <i class="fa @(Model.RequestDetail.IsVoted ? "fa-check" : "fa-arrow-up")"></i>
-                    <span id="voteText">@(Model.RequestDetail.IsVoted ? "Oy Verildi" : "Oy Ver")</span>
+                    <span id="voteText">@(Model.RequestDetail.IsVoted ? L["DetailPage:Voted"].Value : L["DetailPage:Vote"].Value)</span>
                     (<span id="VoteCount">@Model.RequestDetail.VoteCount</span>)
                 </button>
 
                 <div class="mt-2 text-muted small fst-italic" id="voteHelpText">
-                    @(Model.RequestDetail.IsVoted ? "Oyunuzu geri çekmek için tıklayın" : "Desteklemek için tıklayın")
+                    @(Model.RequestDetail.IsVoted ? L["DetailPage:VoteHelpVoted"] : L["DetailPage:VoteHelpNotVoted"])
                 </div>
             }
             else
             {
                 <a href="/Account/Login" class="btn btn-outline-primary btn-lg px-5 shadow">
-                    <i class="fa fa-lock"></i> Oy Vermek İçin Giriş Yapın
+                    <i class="fa fa-lock"></i> @L["DetailPage:LoginToVote"]
                 </a>
             }
         </abp-card-footer>
@@ -100,7 +103,7 @@ else
     <abp-row>
         <abp-column>
             <div class="alert alert-danger shadow-sm">
-                <i class="fa fa-exclamation-triangle"></i> Kayıt bulunamadı!
+                <i class="fa fa-exclamation-triangle"></i> @L["DetailPage:NotFound"]
             </div>
         </abp-column>
     </abp-row>
@@ -108,7 +111,7 @@ else
 
 <abp-row class="mt-4 mb-5">
     <abp-column>
-        <h3 class="mb-3">💬 Yorumlar (<span id="commentCount">@(Model.Comments?.Count ?? 0)</span>)</h3>
+        <h3 class="mb-3">@string.Format(L["DetailPage:CommentsTitle"].Value, Model.Comments?.Count ?? 0)</h3>
 
         @if (CurrentUser.IsAuthenticated)
         {
@@ -117,13 +120,13 @@ else
                     <div id="commentForm">
                         <input type="hidden" id="featureRequestId" value="@Model.RequestDetail.Id" />
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Düşüncelerinizi paylaşın:</label>
-                            <textarea id="commentText" class="form-control" rows="3" placeholder="Bu özellik hakkında ne düşünüyorsunuz?"></textarea>
+                            <label class="form-label fw-bold">@L["DetailPage:ShareThoughts"]</label>
+                            <textarea id="commentText" class="form-control" rows="3" placeholder="@L["DetailPage:CommentPlaceholder"]"></textarea>
                             <span id="commentError" class="text-danger"></span>
                         </div>
                         <abp-button id="submitCommentBtn" 
                                     button-type="Primary" 
-                                    text="Gönder"
+                                    text="@L["DetailPage:Submit"].Value"
                                     icon="paper-plane" />
                     </div>
                 </abp-card-body>
@@ -132,7 +135,7 @@ else
         else
         {
             <div class="alert alert-warning">
-                Yorum yapmak için <a href="/Account/Login" class="alert-link">giriş yapmalısınız</a>.
+                @Html.Raw(string.Format(L["DetailPage:LoginToComment"].Value, "<a href='/Account/Login' class='alert-link'>", "</a>"))
             </div>
         }
 
@@ -159,7 +162,7 @@ else
         </div>
         
         <p id="noCommentsText" class="text-muted text-center py-4" style="display: @(Model.Comments == null || !Model.Comments.Any() ? "block" : "none");">
-            Henüz yorum yapılmamış. İlk yorumu sen yap! 🎉
+            @L["DetailPage:NoComments"]
         </p>
     </abp-column>
 </abp-row>

@@ -1,25 +1,28 @@
 @page
 @using FeatureRequest.FeatureRequests
 @using FeatureRequest.Permissions
+@using FeatureRequest.Localization
+@using Microsoft.AspNetCore.Mvc.Localization
+@inject IHtmlLocalizer<FeatureRequestResource> L
 @model FeatureRequest.Web.Pages.Admin.FeatureRequests.IndexModel
 @{
-    ViewData["Title"] = "Admin - Özellik İstekleri Yönetimi";
+    ViewData["Title"] = L["AdminPage:Title"];
 }
 
 <abp-card>
     <abp-card-header>
         <abp-row>
             <abp-column size-md="_12">
-                <abp-card-title>🛠️ Özellik İstekleri Yönetimi</abp-card-title>
+                <abp-card-title>@L["AdminPage:Header"]</abp-card-title>
             </abp-column>
         </abp-row>
         <abp-row class="mt-3">
             <abp-column size-md="_6">
                 <div class="d-flex align-items-center gap-3 flex-wrap">
                     <div class="d-flex align-items-center gap-2">
-                        <label class="mb-0 fw-bold">Durum:</label>
+                        <label class="mb-0 fw-bold">@L["AdminPage:StatusLabel"]</label>
                         <select id="statusFilter" class="form-select form-select-sm" style="width: auto;">
-                            <option value="">Tümü</option>
+                            <option value="">@L["AdminPage:StatusAll"]</option>
                             @foreach (var status in Enum.GetValues<FeatureRequestStatus>())
                             {
                                 <option value="@status" selected="@(Model.SelectedStatus == status)">@status</option>
@@ -27,9 +30,9 @@
                         </select>
                     </div>
                     <div class="d-flex align-items-center gap-2">
-                        <label class="mb-0 fw-bold">Kategori:</label>
+                        <label class="mb-0 fw-bold">@L["AdminPage:CategoryLabel"]</label>
                         <select id="categoryFilter" class="form-select form-select-sm" style="width: auto;">
-                            <option value="">Tümü</option>
+                            <option value="">@L["AdminPage:CategoryAll"]</option>
                             @foreach (var category in Enum.GetValues<FeatureRequestCategory>())
                             {
                                 <option value="@category" selected="@(Model.SelectedCategory == category)">@category</option>
@@ -40,7 +43,7 @@
             </abp-column>
             <abp-column size-md="_6" class="text-end">
                 <div class="d-flex align-items-center gap-2 justify-content-end">
-                    <label class="mb-0 fw-bold">Sayfa başına:</label>
+                    <label class="mb-0 fw-bold">@L["AdminPage:PageSizeLabel"]</label>
                     <select id="pageSizeFilter" class="form-select form-select-sm" style="width: auto;">
                         @foreach (var size in new[] { 5, 10, 20, 50 })
                         {
@@ -57,13 +60,13 @@
             <abp-table striped-rows="true" hoverable-rows="true">
                 <thead>
                     <tr>
-                        <th>Başlık</th>
-                        <th>Kategori</th>
-                        <th>Durum</th>
-                        <th>Oy</th>
-                        <th>Oluşturan</th>
-                        <th>Tarih</th>
-                        <th>İşlem</th>
+                        <th>@L["AdminPage:TableTitle"]</th>
+                        <th>@L["AdminPage:TableCategory"]</th>
+                        <th>@L["AdminPage:TableStatus"]</th>
+                        <th>@L["AdminPage:TableVote"]</th>
+                        <th>@L["AdminPage:TableCreator"]</th>
+                        <th>@L["AdminPage:TableDate"]</th>
+                        <th>@L["AdminPage:TableAction"]</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -80,30 +83,38 @@
                                 <span class="badge @GetStatusBadgeClass(item.Status)">@item.Status</span>
                             </td>
                             <td><strong>@item.VoteCount</strong></td>
-                            <td>@(item.CreatorUserName ?? "Anonim")</td>
+                            <td>@(item.CreatorUserName ?? L["AdminPage:Anonymous"].Value)</td>
                             <td>@item.CreationTime.ToShortDateString()</td>
                             <td>
-                                <div class="dropdown">
-                                    <abp-button button-type="Outline_Primary" 
-                                                size="Small" 
-                                                data-bs-toggle="dropdown"
-                                                text="Durum Değiştir"
-                                                icon-type="Other"
-                                                icon="fa fa-chevron-down" />
-                                    <ul class="dropdown-menu">
-                                        @foreach (var status in Enum.GetValues<FeatureRequestStatus>())
-                                        {
-                                            <li>
-                                                <a class="dropdown-item status-change-btn @(item.Status == status ? "active" : "")" 
-                                                   href="#" 
-                                                   data-id="@item.Id" 
-                                                   data-status="@((int)status)"
-                                                   data-status-name="@status">
-                                                    @status
-                                                </a>
-                                            </li>
-                                        }
-                                    </ul>
+                                <div class="d-flex gap-2">
+                                    <div class="dropdown">
+                                        <abp-button button-type="Outline_Primary" 
+                                                    size="Small" 
+                                                    data-bs-toggle="dropdown"
+                                                    text="@L["AdminPage:ChangeStatus"].Value"
+                                                    icon-type="Other"
+                                                    icon="fa fa-chevron-down" />
+                                        <ul class="dropdown-menu">
+                                            @foreach (var status in Enum.GetValues<FeatureRequestStatus>())
+                                            {
+                                                <li>
+                                                    <a class="dropdown-item status-change-btn @(item.Status == status ? "active" : "")" 
+                                                       href="#" 
+                                                       data-id="@item.Id" 
+                                                       data-status="@((int)status)"
+                                                       data-status-name="@status">
+                                                        @status
+                                                    </a>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                    <button class="btn btn-sm btn-danger delete-request-btn" 
+                                            data-id="@item.Id" 
+                                            data-title="@item.Title"
+                                            title="@L["AdminPage:Delete"]">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -116,7 +127,7 @@
             <abp-row>
                 <abp-column>
                     <div class="alert alert-info text-center">
-                        <i class="fa fa-info-circle"></i> Filtrelere uygun özellik isteği bulunamadı.
+                        <i class="fa fa-info-circle"></i> @L["AdminPage:NoResults"]
                     </div>
                 </abp-column>
             </abp-row>
@@ -143,7 +154,7 @@
                         </a>
                     </li>
                 </ul>
-                <p class="text-center text-muted">Toplam @Model.TotalCount istek</p>
+                <p class="text-center text-muted">@string.Format(L["AdminPage:TotalRequests"].Value, Model.TotalCount)</p>
             </nav>
         }
     </abp-card-body>

@@ -1,21 +1,24 @@
 ﻿@page
 @using FeatureRequest.FeatureRequests
+@using FeatureRequest.Localization
+@using Microsoft.AspNetCore.Mvc.Localization
 @using Volo.Abp.Users
 @inject ICurrentUser CurrentUser
+@inject IHtmlLocalizer<FeatureRequestResource> L
 @model FeatureRequest.Web.Pages.FeatureRequests.MyRequestsModel
 @{
-    ViewData["Title"] = "İsteklerim";
+    ViewData["Title"] = L["MyRequestsPage:Title"];
 }
 
 <abp-card>
     <abp-card-header>
         <abp-row>
             <abp-column size-md="_6">
-                <abp-card-title>📋 İsteklerim</abp-card-title>
+                <abp-card-title>@L["MyRequestsPage:Header"]</abp-card-title>
             </abp-column>
             <abp-column size-md="_6" class="text-end">
                 <a href="/FeatureRequests/Create" class="btn btn-primary">
-                    <i class="fa fa-plus"></i> Yeni İstek Oluştur
+                    <i class="fa fa-plus"></i> @L["MyRequestsPage:NewRequest"]
                 </a>
             </abp-column>
         </abp-row>
@@ -25,13 +28,13 @@
                     <li class="nav-item">
                         <a class="nav-link @(Model.Filter == "mine" || string.IsNullOrEmpty(Model.Filter) ? "active" : "")" 
                            href="/FeatureRequests/MyRequests?Filter=mine">
-                            <i class="fa fa-user"></i> Oluşturduklarım
+                            <i class="fa fa-user"></i> @L["MyRequestsPage:MyCreated"]
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link @(Model.Filter == "voted" ? "active" : "")" 
                            href="/FeatureRequests/MyRequests?Filter=voted">
-                            <i class="fa fa-heart"></i> Beğendiklerim
+                            <i class="fa fa-heart"></i> @L["MyRequestsPage:MyVoted"]
                         </a>
                     </li>
                 </ul>
@@ -68,7 +71,7 @@
                             </abp-column>
                             <abp-column size-md="_6" class="text-end">
                                 <span class="badge @(item.IsVoted ? "bg-success" : "bg-secondary") fs-6">
-                                    <i class="fa @(item.IsVoted ? "fa-check" : "fa-arrow-up")"></i> @item.VoteCount Oy
+                                    <i class="fa @(item.IsVoted ? "fa-check" : "fa-arrow-up")"></i> @item.VoteCount @L["MyRequestsPage:VoteCount"]
                                 </span>
                             </abp-column>
                         </abp-row>
@@ -83,11 +86,11 @@
                     <div class="alert alert-info text-center">
                         @if (Model.Filter == "voted")
                         {
-                            <i class="fa fa-heart-broken"></i> @:Henüz hiçbir özellik isteğini beğenmediniz.
+                            <i class="fa fa-heart-broken"></i> @L["MyRequestsPage:NoVotedRequests"]
                         }
                         else
                         {
-                            <i class="fa fa-inbox"></i> @:Henüz hiçbir özellik isteği oluşturmadınız.
+                            <i class="fa fa-inbox"></i> @L["MyRequestsPage:NoCreatedRequests"]
                         }
                     </div>
                 </abp-column>

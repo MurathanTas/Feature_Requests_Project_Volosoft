@@ -40,7 +40,7 @@ public class FeatureRequestMenuContributor : IMenuContributor
             1,
             new ApplicationMenuItem(
                 FeatureRequestMenus.FeatureRequests,
-                l["Özellik İstekleri"],
+                l["Menu:FeatureRequests"],
                 "/FeatureRequests",
                 icon: "fas fa-lightbulb",
                 order: 1
@@ -51,7 +51,7 @@ public class FeatureRequestMenuContributor : IMenuContributor
             1,
             new ApplicationMenuItem(
                 "FeatureRequest.Dashboard",
-                "Dashboard",
+                l["Menu:Dashboard"],
                 "/FeatureRequests/Dashboard",
                 icon: "fas fa-chart-pie",
                 order: 1
@@ -65,7 +65,7 @@ public class FeatureRequestMenuContributor : IMenuContributor
                 2,
                 new ApplicationMenuItem(
                     "FeatureRequest.MyRequests",
-                    "İsteklerim",
+                    l["Menu:MyRequests"],
                     "/FeatureRequests/MyRequests",
                     icon: "fas fa-clipboard-list",
                     order: 2
@@ -80,7 +80,7 @@ public class FeatureRequestMenuContributor : IMenuContributor
             administration.AddItem(
                 new ApplicationMenuItem(
                     "FeatureRequest.Admin",
-                    "Özellik İstekleri Yönetimi",
+                    l["Menu:AdminFeatureRequests"],
                     "/Admin/FeatureRequests",
                     icon: "fas fa-tasks",
                     order: 0

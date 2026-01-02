@@ -1,9 +1,12 @@
 ﻿@page
 @using FeatureRequest.FeatureRequests
+@using FeatureRequest.Localization
+@using Microsoft.AspNetCore.Mvc.Localization
 @using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Modal
+@inject IHtmlLocalizer<FeatureRequestResource> L
 @model FeatureRequest.Web.Pages.FeatureRequests.CreateModel
 @{
-    ViewData["Title"] = "Yeni İstek Oluştur";
+    ViewData["Title"] = L["CreatePage:Title"];
 }
 
 <div class="container mt-5">
@@ -11,38 +14,38 @@
         <div class="col-md-8">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h3><i class="fa fa-plus-circle"></i> Yeni Özellik İsteği</h3>
+                    <h3><i class="fa fa-plus-circle"></i> @L["CreatePage:Header"]</h3>
                 </div>
                 <div class="card-body">
 
                     <form method="post">
 
                         <div class="mb-3">
-                            <label asp-for="Request.Title" class="form-label">Başlık</label>
-                            <input asp-for="Request.Title" class="form-control" placeholder="Örn: Karanlık Mod Desteği" />
+                            <label asp-for="Request.Title" class="form-label">@L["CreatePage:TitleLabel"]</label>
+                            <input asp-for="Request.Title" class="form-control" placeholder="@L["CreatePage:TitlePlaceholder"]" />
                             <span asp-validation-for="Request.Title" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Request.CategoryId" class="form-label">Kategori</label>
+                            <label asp-for="Request.CategoryId" class="form-label">@L["CreatePage:CategoryLabel"]</label>
                             <select asp-for="Request.CategoryId" asp-items="Html.GetEnumSelectList<FeatureRequestCategory>()" class="form-select">
-                                <option value="">Bir kategori seçin...</option>
+                                <option value="">@L["CreatePage:CategoryPlaceholder"]</option>
                             </select>
                             <span asp-validation-for="Request.CategoryId" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Request.Description" class="form-label">Detaylı Açıklama</label>
-                            <textarea asp-for="Request.Description" class="form-control" rows="5" placeholder="İsteğinizi detaylıca anlatın..."></textarea>
+                            <label asp-for="Request.Description" class="form-label">@L["CreatePage:DescriptionLabel"]</label>
+                            <textarea asp-for="Request.Description" class="form-control" rows="5" placeholder="@L["CreatePage:DescriptionPlaceholder"]"></textarea>
                             <span asp-validation-for="Request.Description" class="text-danger"></span>
                         </div>
 
                         <hr />
 
                         <div class="d-flex justify-content-between">
-                            <a href="/FeatureRequests" class="btn btn-secondary">İptal</a>
+                            <a href="/FeatureRequests" class="btn btn-secondary">@L["CreatePage:Cancel"]</a>
                             <button type="submit" class="btn btn-success px-4">
-                                <i class="fa fa-save"></i> Kaydet
+                                <i class="fa fa-save"></i> @L["CreatePage:Save"]
                             </button>
                         </div>
 

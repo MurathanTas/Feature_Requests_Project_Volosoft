@@ -2,32 +2,35 @@
 @using FeatureRequest.Web.Pages.FeatureRequests
 @using FeatureRequest.FeatureRequests
 @using FeatureRequest.Permissions
+@using FeatureRequest.Localization
+@using Microsoft.AspNetCore.Mvc.Localization
 @using Microsoft.AspNetCore.Authorization
 @using Volo.Abp.Users
 @inject ICurrentUser CurrentUser
 @inject IAuthorizationService AuthorizationService
+@inject IHtmlLocalizer<FeatureRequestResource> L
 @model IndexModel
 @{
-    ViewData["Title"] = "Özellik İstekleri";
+    ViewData["Title"] = L["IndexPage:Title"];
 }
 
 <abp-card>
     <abp-card-header>
         <abp-row>
             <abp-column size-md="_6">
-                <abp-card-title>🚀 Özellik İstekleri</abp-card-title>
+                <abp-card-title>@L["IndexPage:Title"]</abp-card-title>
             </abp-column>
             <abp-column size-md="_6" class="text-end">
                 @if (await AuthorizationService.IsGrantedAsync(FeatureRequestPermissions.FeatureRequests.Create))
                 {
                     <a href="/FeatureRequests/Create" class="btn btn-primary">
-                        <i class="fa fa-plus"></i> Yeni İstek Oluştur
+                        <i class="fa fa-plus"></i> @L["IndexPage:NewRequest"]
                     </a>
                 }
                 else if (!CurrentUser.IsAuthenticated)
                 {
                     <a href="/Account/Login" class="btn btn-outline-primary">
-                        <i class="fa fa-sign-in-alt"></i> Giriş Yap
+                        <i class="fa fa-sign-in-alt"></i> @L["IndexPage:Login"]
                     </a>
                 }
             </abp-column>
@@ -35,9 +38,9 @@
         <abp-row class="mt-3">
             <abp-column size-md="_6">
                 <div class="d-flex align-items-center gap-2">
-                    <label class="mb-0 fw-bold">Kategori:</label>
+                    <label class="mb-0 fw-bold">@L["IndexPage:CategoryLabel"]</label>
                     <select id="categoryFilter" class="form-select form-select-sm" style="width: auto;">
-                        <option value="">Tümü</option>
+                        <option value="">@L["IndexPage:CategoryAll"]</option>
                         @foreach (var category in Enum.GetValues<FeatureRequestCategory>())
                         {
                             <option value="@category" selected="@(Model.SelectedCategory == category)">@category</option>
@@ -47,7 +50,7 @@
             </abp-column>
             <abp-column size-md="_6" class="text-end">
                 <div class="d-flex align-items-center gap-2 justify-content-end">
-                    <label class="mb-0 fw-bold">Sayfa başına:</label>
+                    <label class="mb-0 fw-bold">@L["IndexPage:PageSizeLabel"]</label>
                     <select id="pageSizeFilter" class="form-select form-select-sm" style="width: auto;">
                         @foreach (var size in new[] { 5, 10, 20, 50 })
                         {
@@ -67,18 +70,42 @@
                     <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 border rounded shadow-sm p-3" data-votes="@item.VoteCount">
                         <abp-row>
                             <abp-column size-md="_8">
-                                <a href="/FeatureRequests/Detail?id=@item.Id" class="text-decoration-none">
-                                    <h5 class="mb-1 fw-bold text-primary">@item.Title</h5>
-                                </a>
+                                @if (CurrentUser.IsAuthenticated)
+                                {
+                                    <a href="/FeatureRequests/Detail?id=@item.Id" class="text-decoration-none">
+                                        <h5 class="mb-1 fw-bold text-primary">@item.Title</h5>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a href="/Account/Login?returnUrl=/FeatureRequests/Detail?id=@item.Id"
+                                       class="text-decoration-none">
+                                        <h5 class="mb-1 fw-bold text-primary">@item.Title</h5>
+                                    </a>
+                                }
+
+
                             </abp-column>
                             <abp-column size-md="_4" class="text-end">
                                 <small class="text-muted">@item.CreationTime.ToShortDateString()</small>
                             </abp-column>
                         </abp-row>
 
-                        <a href="/FeatureRequests/Detail?id=@item.Id" class="text-decoration-none text-secondary">
-                            <p class="mb-1">@item.Description</p>
-                        </a>
+                        @if (CurrentUser.IsAuthenticated)
+                        {
+                            <a href="/FeatureRequests/Detail?id=@item.Id" class="text-decoration-none text-secondary">
+                                <p class="mb-1">@item.Description</p>
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="/Account/Login?returnUrl=/FeatureRequests/Detail?id=@item.Id"
+                               class="text-decoration-none text-secondary">
+                                <p class="mb-1">@item.Description</p>
+                            </a>
+                        }
+
+
 
                         <abp-row class="mt-3">
                             <abp-column size-md="_6">
@@ -95,7 +122,7 @@
                                 @if (isVotingClosed)
                                 {
                                     <span class="badge bg-secondary fw-bold" style="min-width: 90px;">
-                                        <i class="fa fa-lock"></i> @item.VoteCount Oy
+                                        <i class="fa fa-lock"></i> @item.VoteCount @L["IndexPage:VotingClosed"]
                                     </span>
                                 }
                                 else if (CurrentUser.IsAuthenticated)
@@ -105,13 +132,13 @@
                                             data-voted="@item.IsVoted.ToString().ToLower()"
                                             style="min-width: 90px;">
                                         <i class="fa @(item.IsVoted ? "fa-check" : "fa-arrow-up")"></i>
-                                        <span class="vote-count">@item.VoteCount</span> Oy
+                                        <span class="vote-count">@item.VoteCount</span> @L["IndexPage:VoteCount"]
                                     </button>
                                 }
                                 else
                                 {
                                     <a href="/Account/Login" class="btn btn-sm btn-outline-secondary fw-bold" style="min-width: 90px;">
-                                        <i class="fa fa-arrow-up"></i> @item.VoteCount Oy
+                                        <i class="fa fa-arrow-up"></i> @item.VoteCount @L["IndexPage:VoteCount"]
                                     </a>
                                 }
                             </abp-column>
@@ -123,7 +150,7 @@
         else
         {
             <div class="alert alert-warning text-center">
-                Henüz hiç özellik isteği yok. İlkini sen ekle!
+                @L["IndexPage:NoRequests"]
             </div>
         }
 
@@ -148,7 +175,7 @@
                         </a>
                     </li>
                 </ul>
-                <p class="text-center text-muted">Toplam @Model.TotalCount istek</p>
+                <p class="text-center text-muted">@string.Format(L["IndexPage:TotalRequests"].Value, Model.TotalCount)</p>
             </nav>
         }
     </abp-card-body>

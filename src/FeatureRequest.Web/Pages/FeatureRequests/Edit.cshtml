@@ -1,8 +1,11 @@
 ﻿@page
 @using FeatureRequest.FeatureRequests
+@using FeatureRequest.Localization
+@using Microsoft.AspNetCore.Mvc.Localization
+@inject IHtmlLocalizer<FeatureRequestResource> L
 @model FeatureRequest.Web.Pages.FeatureRequests.EditModel
 @{
-    ViewData["Title"] = "İsteği Düzenle";
+    ViewData["Title"] = L["EditPage:Title"];
 }
 
 <div class="container mt-5">
@@ -10,32 +13,32 @@
         <div class="col-md-8">
             <div class="card shadow">
                 <div class="card-header bg-warning text-dark">
-                    <h3><i class="fa fa-edit"></i> İsteği Düzenle</h3>
+                    <h3><i class="fa fa-edit"></i> @L["EditPage:Header"]</h3>
                 </div>
                 <div class="card-body">
 
                     <form method="post">
 
                         <div class="mb-3">
-                            <label asp-for="Request.Title" class="form-label">Başlık</label>
+                            <label asp-for="Request.Title" class="form-label">@L["EditPage:TitleLabel"]</label>
                             <input asp-for="Request.Title" class="form-control" />
                             <span asp-validation-for="Request.Title" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Request.CategoryId" class="form-label">Kategori</label>
+                            <label asp-for="Request.CategoryId" class="form-label">@L["EditPage:CategoryLabel"]</label>
                             <select asp-for="Request.CategoryId" asp-items="Html.GetEnumSelectList<FeatureRequestCategory>()" class="form-select"></select>
                             <span asp-validation-for="Request.CategoryId" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Request.Status" class="form-label">Durum</label>
+                            <label asp-for="Request.Status" class="form-label">@L["EditPage:StatusLabel"]</label>
                             <select asp-for="Request.Status" asp-items="Html.GetEnumSelectList<FeatureRequestStatus>()" class="form-select"></select>
                             <span asp-validation-for="Request.Status" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Request.Description" class="form-label">Açıklama</label>
+                            <label asp-for="Request.Description" class="form-label">@L["EditPage:DescriptionLabel"]</label>
                             <textarea asp-for="Request.Description" class="form-control" rows="5"></textarea>
                             <span asp-validation-for="Request.Description" class="text-danger"></span>
                         </div>
@@ -43,10 +46,10 @@
                         <hr />
 
                         <div class="d-flex justify-content-between">
-                            <a href="/FeatureRequests/Detail?id=@Model.Id" class="btn btn-secondary">İptal</a>
+                            <a href="/FeatureRequests/Detail?id=@Model.Id" class="btn btn-secondary">@L["EditPage:Cancel"]</a>
 
                             <button type="submit" class="btn btn-warning px-4">
-                                <i class="fa fa-save"></i> Değişiklikleri Kaydet
+                                <i class="fa fa-save"></i> @L["EditPage:SaveChanges"]
                             </button>
                         </div>
 

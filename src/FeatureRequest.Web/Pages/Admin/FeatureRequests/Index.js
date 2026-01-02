@@ -32,17 +32,46 @@
     var status = $link.data('status');
     var statusName = $link.data('status-name');
 
+    var l = abp.localization.getResource('FeatureRequest');
+
     abp.message.confirm(
-      'Durumu "' + statusName + '" olarak değiştirmek istediğinize emin misiniz?',
-      'Durum Değiştir'
+      l('AdminPage:ConfirmStatusChange', statusName),
+      l('AdminPage:ConfirmStatusChangeTitle')
     ).then(function (confirmed) {
       if (confirmed) {
         service.updateStatus(id, status).then(function () {
-          abp.notify.success('Durum başarıyla güncellendi!');
+          abp.notify.success(l('AdminPage:StatusUpdateSuccess'));
           location.reload();
         }).catch(function (err) {
           console.error(err);
-          abp.notify.error('Bir hata oluştu.');
+          abp.notify.error(l('AdminPage:StatusUpdateError'));
+        });
+      }
+    });
+  });
+
+  $('.delete-request-btn').click(function (e) {
+    e.preventDefault();
+    var $button = $(this);
+    var id = $button.data('id');
+    var title = $button.data('title');
+
+    var l = abp.localization.getResource('FeatureRequest');
+
+    abp.message.confirm(
+      l('AdminPage:ConfirmDelete', title),
+      l('AdminPage:ConfirmDeleteTitle')
+    ).then(function (confirmed) {
+      if (confirmed) {
+        service.delete(id).then(function () {
+          abp.notify.success(l('AdminPage:DeleteSuccess'));
+          // Silinen satırı DOM'dan kaldır
+          $button.closest('tr').fadeOut(300, function () {
+            $(this).remove();
+          });
+        }).catch(function (err) {
+          console.error(err);
+          abp.notify.error(l('AdminPage:DeleteError'));
         });
       }
     });

@@ -1,4 +1,4 @@
-@page
+﻿@page
 @using Microsoft.AspNetCore.Mvc.Localization
 @using FeatureRequest.Localization
 @using Volo.Abp.Users
@@ -6,7 +6,7 @@
 @inject ICurrentUser CurrentUser
 @model FeatureRequest.Web.Pages.IndexModel
 @{
-    ViewData["Title"] = "Ana Sayfa";
+    ViewData["Title"] = L["Menu:Home"];
 }
 
 <style>
@@ -68,26 +68,25 @@
 <div class="hero-section text-center">
     <div class="container">
         <h1 class="display-3 fw-bold mb-4 animate__animated animate__fadeInDown">
-            Fikirlerinizi Geleceğe Taşıyın
+            @L["HomePage:Title"]
         </h1>
         <p class="lead mb-5 col-lg-8 mx-auto opacity-75 animate__animated animate__fadeInUp">
-            Ürünümüzü geliştirmemize yardımcı olun. Yeni özellik isteklerinde bulunun,
-            topluluğun fikirlerini oylayın ve tartışmalara katılın.
+            @L["HomePage:Subtitle"]
         </p>
         <div class="d-flex justify-content-center gap-3 animate__animated animate__fadeInUp animate__delay-1s">
             @if (!CurrentUser.IsAuthenticated)
             {
                 <a href="/Account/Login" class="btn btn-light btn-lg cta-btn text-primary">
-                    <i class="fa fa-sign-in-alt me-2"></i> Giriş Yapın
+                    <i class="fa fa-sign-in-alt me-2"></i> @L["HomePage:Login"]
                 </a>
             }
             else
             {
                 <a href="/FeatureRequests" class="btn btn-light btn-lg cta-btn text-primary">
-                    <i class="fa fa-lightbulb me-2"></i> İstekleri İncele
+                    <i class="fa fa-lightbulb me-2"></i> @L["HomePage:ViewRequests"]
                 </a>
                 <a href="/FeatureRequests/Dashboard" class="btn btn-outline-light btn-lg cta-btn">
-                    <i class="fa fa-chart-line me-2"></i> Dashboard
+                    <i class="fa fa-chart-line me-2"></i> @L["HomePage:Dashboard"]
                 </a>
             }
         </div>
@@ -102,10 +101,9 @@
                     <div class="feature-icon icon-bg-1 mx-auto">
                         <i class="fas fa-plus"></i>
                     </div>
-                    <h3 class="h4 fw-bold mb-3">İstek Oluşturun</h3>
+                    <h3 class="h4 fw-bold mb-3">@L["HomePage:Feature1Title"]</h3>
                     <p class="text-muted">
-                        Aklınızdaki harika fikri paylaşın. Detaylı açıklamalar ve kategorilerle
-                        isteğinizi oluşturun, sesinizi duyurun.
+                        @L["HomePage:Feature1Description"]
                     </p>
                 </div>
             </div>
@@ -117,10 +115,9 @@
                     <div class="feature-icon icon-bg-2 mx-auto">
                         <i class="fas fa-vote-yea"></i>
                     </div>
-                    <h3 class="h4 fw-bold mb-3">Oylayın & Destekleyin</h3>
+                    <h3 class="h4 fw-bold mb-3">@L["HomePage:Feature2Title"]</h3>
                     <p class="text-muted">
-                        Topluluğun paylaştığı fikirleri inceleyin. Beğendiğiniz özellikleri
-                        oylayarak geliştirme sürecine yön verin.
+                        @L["HomePage:Feature2Description"]
                     </p>
                 </div>
             </div>
@@ -132,10 +129,9 @@
                     <div class="feature-icon icon-bg-3 mx-auto">
                         <i class="fas fa-comments"></i>
                     </div>
-                    <h3 class="h4 fw-bold mb-3">Tartışın</h3>
+                    <h3 class="h4 fw-bold mb-3">@L["HomePage:Feature3Title"]</h3>
                     <p class="text-muted">
-                        İstekler hakkında yorum yapın, geri bildirim verin ve
-                        diğer kullanıcılarla fikir alışverişinde bulunun.
+                        @L["HomePage:Feature3Description"]
                     </p>
                 </div>
             </div>
@@ -144,6 +140,5 @@
 </div>
 
 @section scripts {
-    <!-- Animate.css for subtle animations (optional, looks good if available/linked globally or can be added via CDN if needed) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 }
