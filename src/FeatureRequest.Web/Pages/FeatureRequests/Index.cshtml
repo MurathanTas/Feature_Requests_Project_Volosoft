@@ -1,8 +1,11 @@
 ﻿@page
 @using FeatureRequest.Web.Pages.FeatureRequests
 @using FeatureRequest.FeatureRequests
+@using FeatureRequest.Permissions
+@using Microsoft.AspNetCore.Authorization
 @using Volo.Abp.Users
 @inject ICurrentUser CurrentUser
+@inject IAuthorizationService AuthorizationService
 @model IndexModel
 @{
     ViewData["Title"] = "Özellik İstekleri";
@@ -15,10 +18,16 @@
                 <abp-card-title>🚀 Özellik İstekleri</abp-card-title>
             </abp-column>
             <abp-column size-md="_6" class="text-end">
-                @if (CurrentUser.IsAuthenticated)
+                @if (await AuthorizationService.IsGrantedAsync(FeatureRequestPermissions.FeatureRequests.Create))
                 {
                     <a href="/FeatureRequests/Create" class="btn btn-primary">
                         <i class="fa fa-plus"></i> Yeni İstek Oluştur
+                    </a>
+                }
+                else if (!CurrentUser.IsAuthenticated)
+                {
+                    <a href="/Account/Login" class="btn btn-outline-primary">
+                        <i class="fa fa-sign-in-alt"></i> Giriş Yap
                     </a>
                 }
             </abp-column>

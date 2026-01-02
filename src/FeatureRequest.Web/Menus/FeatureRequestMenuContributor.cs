@@ -37,7 +37,7 @@ public class FeatureRequestMenuContributor : IMenuContributor
         );
 
         context.Menu.Items.Insert(
-            0,
+            1,
             new ApplicationMenuItem(
                 FeatureRequestMenus.FeatureRequests,
                 l["Özellik İstekleri"],
@@ -48,17 +48,16 @@ public class FeatureRequestMenuContributor : IMenuContributor
         );
 
         context.Menu.Items.Insert(
-            0,
+            1,
             new ApplicationMenuItem(
                 "FeatureRequest.Dashboard",
                 "Dashboard",
                 "/FeatureRequests/Dashboard",
                 icon: "fas fa-chart-pie",
-                order: 2
+                order: 1
             )
         );
 
-        // İsteklerim - Sadece giriş yapmış kullanıcılar için
         var currentUser = context.ServiceProvider.GetRequiredService<Volo.Abp.Users.ICurrentUser>();
         if (currentUser.IsAuthenticated)
         {
@@ -74,7 +73,6 @@ public class FeatureRequestMenuContributor : IMenuContributor
             );
         }
 
-        // Admin Menu - Özellik İstekleri Yönetimi
         var hasAdminPermission = await context.IsGrantedAsync(FeatureRequestPermissions.FeatureRequests.UpdateStatus);
         
         if (hasAdminPermission)
@@ -89,26 +87,19 @@ public class FeatureRequestMenuContributor : IMenuContributor
                 )
             );
         }
-        else
+
+        administration.TryRemoveMenuItem(TenantManagementMenuNames.GroupName);
+        administration.TryRemoveMenuItem(SettingManagementMenuNames.GroupName);
+        
+        var identityMenu = administration.GetMenuItemOrNull(IdentityMenuNames.GroupName);
+        if (identityMenu != null)
         {
-            // Normal kullanıcılar için Yönetim menüsünü tamamen gizle
-            administration.TryRemoveMenuItem(SettingManagementMenuNames.GroupName);
+            identityMenu.TryRemoveMenuItem(IdentityMenuNames.Roles);
+        }
+        
+        if (!hasAdminPermission)
+        {
             administration.TryRemoveMenuItem(IdentityMenuNames.GroupName);
-        }
-
-        if (MultiTenancyConsts.IsEnabled)
-        {
-            administration.SetSubItemOrder(TenantManagementMenuNames.GroupName, 1);
-        }
-        else
-        {
-            administration.TryRemoveMenuItem(TenantManagementMenuNames.GroupName);
-        }
-
-        if (hasAdminPermission)
-        {
-            administration.SetSubItemOrder(IdentityMenuNames.GroupName, 2);
-            administration.SetSubItemOrder(SettingManagementMenuNames.GroupName, 3);
         }
     }
 }

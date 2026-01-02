@@ -1,60 +1,149 @@
 @page
-<div class="row mb-3">
-    <div class="col-xl-6 col-12 d-flex">
-        <div class="card h-lg-100 w-100 overflow-hidden">
-            <div class="card-body">
-                <div class="starting-content">
-                    <h3>Getting Started</h3>
-                    <p class="lead text-muted mb-2">Learn how to create and run a new web application using the application startup template.</p>
-                    <a href="https://docs.abp.io/en/commercial/latest/getting-started" class="btn btn-brand mb-4" target="_blank">Getting Started</a>
+@using Microsoft.AspNetCore.Mvc.Localization
+@using FeatureRequest.Localization
+@using Volo.Abp.Users
+@inject IHtmlLocalizer<FeatureRequestResource> L
+@inject ICurrentUser CurrentUser
+@model FeatureRequest.Web.Pages.IndexModel
+@{
+    ViewData["Title"] = "Ana Sayfa";
+}
 
-                    <h4>Web Application Development Tutorial</h4>
-                    <p class="text-muted mb-2">Learn how to build an ABP based web application named Acme.BookStore.</p>
-                    <a href="https://docs.abp.io/en/commercial/latest/tutorials/book-store/part-1?UI=MVC&DB=EF" class="btn btn-primary soft mb-4" target="_blank">Explore Tutorial</a>
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 100px 0;
+        border-radius: 0 0 50px 50px;
+        margin-top: -1.5rem;
+        margin-left: -1.5rem;
+        margin-right: -1.5rem;
+        margin-bottom: 3rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .feature-card {
+        border: none;
+        border-radius: 15px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        background: white;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+    
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin-bottom: 1.5rem;
+        font-size: 2rem;
+    }
+    
+    .icon-bg-1 { background-color: rgba(102, 126, 234, 0.1); color: #667eea; }
+    .icon-bg-2 { background-color: rgba(255, 107, 107, 0.1); color: #ff6b6b; }
+    .icon-bg-3 { background-color: rgba(29, 209, 161, 0.1); color: #1dd1a1; }
+    
+    .cta-btn {
+        padding: 12px 30px;
+        border-radius: 30px;
+        font-weight: 600;
+        transition: all 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .cta-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+</style>
 
-                    <h4>Customize Lepton Theme</h4>
-                    <p class="text-muted mb-2">Learn how to customize LeptonX Theme as you wish.</p>
-                    <a href="https://docs.abp.io/en/commercial/latest/themes/lepton/customizing-lepton-theme" class="btn btn-primary soft mb-5 mb-xl-0" target="_blank">Customize Lepton</a>
-                </div>
-                <img class="card-bg-image" src="/images/getting-started/bg-01.png">
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 d-flex">
-        <div class="row">
-            <div class="col-12 d-flex">
-                <div class="card overflow-hidden">
-                    <div class="card-body pb-0">
-                        <div class="abp-support abp-logo mb-2"></div>
-                        <p class="text-muted mb-2">You can check for similar problems and solutions, or open a new topic to discuss your specific issue.</p>
-                        <a href="https://support.abp.io/QA/Questions" class="btn btn-brand soft" target="_blank">Visit Support</a>
-                        <img class="" src="/images/getting-started/img-support.png">
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 d-flex">
-                <div class="card h-md-100 overflow-hidden">
-                    <div class="card-body pb-0">
-                        <div class="abp-blog abp-logo mb-2"></div>
-                        <p class="text-muted mb-2">You can find content on .NET development, cross-platform, ASP.NET application templates, ABP-related news, and more.</p>
-                        <a href="https://blog.abp.io/abp" class="btn btn-brand soft" target="_blank">Visit Blog</a>
-                        <img style="margin-bottom: -24px;" src="/images/getting-started/img-blog.png">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 d-flex">
-        <div class="card h-100 overflow-hidden">
-            <div class="card-body">
-                <div class="abp-community abp-logo mb-2"></div>
-                <p class="lead text-muted">A unique community platform for <span class="fw-bold">ABP Lovers!</span></p>
-                <p class="text-muted mb-2">Explore all ABP users' experiences with the ABP Framework, discover articles and videos on how to use ABP, and join raffles for a chance to win surprise gifts!</p>
-                <a class="btn btn-brand soft mb-3" href="https://community.abp.io/" target="_blank">Join ABP Community</a>
-            </div>
-            <img class="mt-3" src="/images/getting-started/img-community.png">
+<div class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-3 fw-bold mb-4 animate__animated animate__fadeInDown">
+            Fikirlerinizi Geleceğe Taşıyın
+        </h1>
+        <p class="lead mb-5 col-lg-8 mx-auto opacity-75 animate__animated animate__fadeInUp">
+            Ürünümüzü geliştirmemize yardımcı olun. Yeni özellik isteklerinde bulunun,
+            topluluğun fikirlerini oylayın ve tartışmalara katılın.
+        </p>
+        <div class="d-flex justify-content-center gap-3 animate__animated animate__fadeInUp animate__delay-1s">
+            @if (!CurrentUser.IsAuthenticated)
+            {
+                <a href="/Account/Login" class="btn btn-light btn-lg cta-btn text-primary">
+                    <i class="fa fa-sign-in-alt me-2"></i> Giriş Yapın
+                </a>
+            }
+            else
+            {
+                <a href="/FeatureRequests" class="btn btn-light btn-lg cta-btn text-primary">
+                    <i class="fa fa-lightbulb me-2"></i> İstekleri İncele
+                </a>
+                <a href="/FeatureRequests/Dashboard" class="btn btn-outline-light btn-lg cta-btn">
+                    <i class="fa fa-chart-line me-2"></i> Dashboard
+                </a>
+            }
         </div>
     </div>
 </div>
+
+<div class="container pb-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card feature-card p-4 text-center">
+                <div class="card-body">
+                    <div class="feature-icon icon-bg-1 mx-auto">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <h3 class="h4 fw-bold mb-3">İstek Oluşturun</h3>
+                    <p class="text-muted">
+                        Aklınızdaki harika fikri paylaşın. Detaylı açıklamalar ve kategorilerle
+                        isteğinizi oluşturun, sesinizi duyurun.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card feature-card p-4 text-center">
+                <div class="card-body">
+                    <div class="feature-icon icon-bg-2 mx-auto">
+                        <i class="fas fa-vote-yea"></i>
+                    </div>
+                    <h3 class="h4 fw-bold mb-3">Oylayın & Destekleyin</h3>
+                    <p class="text-muted">
+                        Topluluğun paylaştığı fikirleri inceleyin. Beğendiğiniz özellikleri
+                        oylayarak geliştirme sürecine yön verin.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card feature-card p-4 text-center">
+                <div class="card-body">
+                    <div class="feature-icon icon-bg-3 mx-auto">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3 class="h4 fw-bold mb-3">Tartışın</h3>
+                    <p class="text-muted">
+                        İstekler hakkında yorum yapın, geri bildirim verin ve
+                        diğer kullanıcılarla fikir alışverişinde bulunun.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <!-- Animate.css for subtle animations (optional, looks good if available/linked globally or can be added via CDN if needed) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+}

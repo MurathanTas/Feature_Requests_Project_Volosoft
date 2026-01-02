@@ -4,6 +4,12 @@
     "AppName": "FeatureRequest",
     "Menu:Home": "Home",
     "Welcome": "Welcome",
-    "LongWelcomeMessage": "Welcome to the application. This is a startup project based on the ABP framework. For more information, visit abp.io."
+    "LongWelcomeMessage": "Welcome to the application. This is a startup project based on the ABP framework. For more information, visit abp.io.",
+    "Permission:FeatureRequest": "Feature Request Management",
+    "Permission:FeatureRequests": "Feature Requests",
+    "Permission:FeatureRequests.Create": "Create feature requests",
+    "Permission:FeatureRequests.Edit": "Edit feature requests",
+    "Permission:FeatureRequests.Delete": "Delete feature requests",
+    "Permission:FeatureRequests.UpdateStatus": "Update feature request status"
   }
 }

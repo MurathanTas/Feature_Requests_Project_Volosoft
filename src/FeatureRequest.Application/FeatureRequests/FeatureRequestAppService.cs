@@ -36,6 +36,12 @@ namespace FeatureRequest.FeatureRequests
             _voteRepository = voteRepository;
             _commentRepository = commentRepository;
             _userRepository = userRepository;
+            
+            GetPolicyName = FeatureRequestPermissions.FeatureRequests.Default;
+            GetListPolicyName = FeatureRequestPermissions.FeatureRequests.Default;
+            CreatePolicyName = FeatureRequestPermissions.FeatureRequests.Create;
+            UpdatePolicyName = FeatureRequestPermissions.FeatureRequests.Edit;
+            DeletePolicyName = FeatureRequestPermissions.FeatureRequests.Delete;
         }
 
 

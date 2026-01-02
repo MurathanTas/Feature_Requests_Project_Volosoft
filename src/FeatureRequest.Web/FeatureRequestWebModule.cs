@@ -111,8 +111,18 @@ public class FeatureRequestWebModule : AbpModule
         ConfigureNavigationServices();
         ConfigureAutoApiControllers();
         ConfigureSwaggerServices(context.Services);
+        ConfigureRazorPagesAuthorization();
 
         context.Services.AddMapperlyObjectMapper<FeatureRequestWebModule>();
+    }
+
+    private void ConfigureRazorPagesAuthorization()
+    {
+        Configure<Microsoft.AspNetCore.Mvc.RazorPages.RazorPagesOptions>(options =>
+        {
+            options.Conventions.AuthorizePage("/FeatureRequests/Create", Permissions.FeatureRequestPermissions.FeatureRequests.Create);
+            options.Conventions.AuthorizePage("/FeatureRequests/Edit", Permissions.FeatureRequestPermissions.FeatureRequests.Edit);
+        });
     }
 
     private void ConfigureAuthentication(ServiceConfigurationContext context)

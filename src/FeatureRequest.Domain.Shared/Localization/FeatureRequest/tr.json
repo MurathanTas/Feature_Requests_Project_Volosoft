@@ -4,6 +4,12 @@
     "AppName": "FeatureRequest",
     "Menu:Home": "Ana sayfa",
     "Welcome": "Hoşgeldiniz",
-    "LongWelcomeMessage": "Uygulamaya hoşgeldiniz. Bu, ABP framework'ü üzerine bina edilmiş bir başlangıç projesidir. Daha fazla bilgi için abp.io adresini ziyaret edebilirsiniz."
+    "LongWelcomeMessage": "Uygulamaya hoşgeldiniz. Bu, ABP framework'ü üzerine bina edilmiş bir başlangıç projesidir. Daha fazla bilgi için abp.io adresini ziyaret edebilirsiniz.",
+    "Permission:FeatureRequest": "Özellik İsteği Yönetimi",
+    "Permission:FeatureRequests": "Özellik İstekleri",
+    "Permission:FeatureRequests.Create": "Özellik isteği oluşturma",
+    "Permission:FeatureRequests.Edit": "Özellik isteği düzenleme",
+    "Permission:FeatureRequests.Delete": "Özellik isteği silme",
+    "Permission:FeatureRequests.UpdateStatus": "Özellik isteği durumu güncelleme"
   }
 }
