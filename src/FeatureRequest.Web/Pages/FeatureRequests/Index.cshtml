@@ -1,89 +1,112 @@
 ﻿@page
 @using FeatureRequest.Web.Pages.FeatureRequests
 @using FeatureRequest.FeatureRequests
-@using Volo.Abp.Users  @* YENİ EKLENDİ *@
+@using Volo.Abp.Users
 @inject ICurrentUser CurrentUser
 @model IndexModel
 @{
     ViewData["Title"] = "Özellik İstekleri";
 }
 
-<div class="card">
-    <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h1>🚀 Özellik İstekleri</h1>
-            <a href="/FeatureRequests/Create" class="btn btn-primary">
-                <i class="fa fa-plus"></i> Yeni İstek Oluştur
-            </a>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <label class="mb-0 fw-bold">Kategori:</label>
-            <select id="categoryFilter" class="form-select form-select-sm" style="width: auto;">
-                <option value="">Tümü</option>
-                @foreach (var category in Enum.GetValues<FeatureRequestCategory>())
+<abp-card>
+    <abp-card-header>
+        <abp-row>
+            <abp-column size-md="_6">
+                <abp-card-title>🚀 Özellik İstekleri</abp-card-title>
+            </abp-column>
+            <abp-column size-md="_6" class="text-end">
+                @if (CurrentUser.IsAuthenticated)
                 {
-                    <option value="@category" selected="@(Model.SelectedCategory == category)">@category</option>
+                    <a href="/FeatureRequests/Create" class="btn btn-primary">
+                        <i class="fa fa-plus"></i> Yeni İstek Oluştur
+                    </a>
                 }
-            </select>
-        </div>
-    </div>
-    <div class="card-body">
-
+            </abp-column>
+        </abp-row>
+        <abp-row class="mt-3">
+            <abp-column size-md="_6">
+                <div class="d-flex align-items-center gap-2">
+                    <label class="mb-0 fw-bold">Kategori:</label>
+                    <select id="categoryFilter" class="form-select form-select-sm" style="width: auto;">
+                        <option value="">Tümü</option>
+                        @foreach (var category in Enum.GetValues<FeatureRequestCategory>())
+                        {
+                            <option value="@category" selected="@(Model.SelectedCategory == category)">@category</option>
+                        }
+                    </select>
+                </div>
+            </abp-column>
+            <abp-column size-md="_6" class="text-end">
+                <div class="d-flex align-items-center gap-2 justify-content-end">
+                    <label class="mb-0 fw-bold">Sayfa başına:</label>
+                    <select id="pageSizeFilter" class="form-select form-select-sm" style="width: auto;">
+                        @foreach (var size in new[] { 5, 10, 20, 50 })
+                        {
+                            <option value="@size" selected="@(Model.PageSize == size)">@size</option>
+                        }
+                    </select>
+                </div>
+            </abp-column>
+        </abp-row>
+    </abp-card-header>
+    <abp-card-body>
         @if (Model.RequestList != null && Model.RequestList.Any())
         {
             <div id="RequestListContainer" class="list-group">
                 @foreach (var item in Model.RequestList)
                 {
-                    <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 border rounded shadow-sm p-3">
-
-                        <div class="d-flex w-100 justify-content-between">
-                            <a href="/FeatureRequests/Detail?id=@item.Id" class="text-decoration-none">
-                                <h5 class="mb-1 fw-bold text-primary">@item.Title</h5>
-                            </a>
-                            <small class="text-muted">@item.CreationTime.ToShortDateString()</small>
-                        </div>
+                    <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 border rounded shadow-sm p-3" data-votes="@item.VoteCount">
+                        <abp-row>
+                            <abp-column size-md="_8">
+                                <a href="/FeatureRequests/Detail?id=@item.Id" class="text-decoration-none">
+                                    <h5 class="mb-1 fw-bold text-primary">@item.Title</h5>
+                                </a>
+                            </abp-column>
+                            <abp-column size-md="_4" class="text-end">
+                                <small class="text-muted">@item.CreationTime.ToShortDateString()</small>
+                            </abp-column>
+                        </abp-row>
 
                         <a href="/FeatureRequests/Detail?id=@item.Id" class="text-decoration-none text-secondary">
-                            <p class="mb-1">
-                                @item.Description
-                            </p>
+                            <p class="mb-1">@item.Description</p>
                         </a>
 
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <div>
+                        <abp-row class="mt-3">
+                            <abp-column size-md="_6">
                                 <span class="badge bg-info text-dark me-1">@item.CategoryId</span>
                                 <span class="badge bg-secondary">@item.Status</span>
-                            </div>
+                            </abp-column>
+                            <abp-column size-md="_6" class="text-end">
+                                @{
+                                    var isVotingClosed = item.Status == FeatureRequestStatus.Approved ||
+                                                         item.Status == FeatureRequestStatus.Completed || 
+                                                         item.Status == FeatureRequestStatus.Rejected;
+                                }
 
-                            @{
-                                var isVotingClosed = item.Status == FeatureRequestStatus.Approved ||
-                                                     item.Status == FeatureRequestStatus.Completed || 
-                                                     item.Status == FeatureRequestStatus.Rejected;
-                            }
-
-                            @if (isVotingClosed)
-                            {
-                                <span class="badge bg-secondary fw-bold" style="min-width: 90px;">
-                                    <i class="fa fa-lock"></i> @item.VoteCount Oy
-                                </span>
-                            }
-                            else if (CurrentUser.IsAuthenticated)
-                            {
-                                <button class="btn btn-sm fw-bold upvote-btn @(item.IsVoted ? "btn-success" : "btn-outline-success")" 
-                                        data-id="@item.Id" 
-                                        data-voted="@item.IsVoted.ToString().ToLower()"
-                                        style="min-width: 90px;">
-                                    <i class="fa @(item.IsVoted ? "fa-check" : "fa-arrow-up")"></i>
-                                    <span class="vote-count">@item.VoteCount</span> Oy
-                                </button>
-                            }
-                            else
-                            {
-                                <a href="/Account/Login" class="btn btn-sm btn-outline-secondary fw-bold" style="min-width: 90px;">
-                                    <i class="fa fa-arrow-up"></i> @item.VoteCount Oy
-                                </a>
-                            }
-                        </div>
+                                @if (isVotingClosed)
+                                {
+                                    <span class="badge bg-secondary fw-bold" style="min-width: 90px;">
+                                        <i class="fa fa-lock"></i> @item.VoteCount Oy
+                                    </span>
+                                }
+                                else if (CurrentUser.IsAuthenticated)
+                                {
+                                    <button class="btn btn-sm fw-bold upvote-btn @(item.IsVoted ? "btn-success" : "btn-outline-success")" 
+                                            data-id="@item.Id" 
+                                            data-voted="@item.IsVoted.ToString().ToLower()"
+                                            style="min-width: 90px;">
+                                        <i class="fa @(item.IsVoted ? "fa-check" : "fa-arrow-up")"></i>
+                                        <span class="vote-count">@item.VoteCount</span> Oy
+                                    </button>
+                                }
+                                else
+                                {
+                                    <a href="/Account/Login" class="btn btn-sm btn-outline-secondary fw-bold" style="min-width: 90px;">
+                                        <i class="fa fa-arrow-up"></i> @item.VoteCount Oy
+                                    </a>
+                                }
+                            </abp-column>
+                        </abp-row>
                     </div>
                 }
             </div>
@@ -94,8 +117,33 @@
                 Henüz hiç özellik isteği yok. İlkini sen ekle!
             </div>
         }
-    </div>
-</div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="?CurrentPage=@(Model.CurrentPage - 1)&PageSize=@Model.PageSize@(Model.SelectedCategory.HasValue ? "&SelectedCategory=" + Model.SelectedCategory : "")">
+                            <i class="fa fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="?CurrentPage=@i&PageSize=@Model.PageSize@(Model.SelectedCategory.HasValue ? "&SelectedCategory=" + Model.SelectedCategory : "")">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="?CurrentPage=@(Model.CurrentPage + 1)&PageSize=@Model.PageSize@(Model.SelectedCategory.HasValue ? "&SelectedCategory=" + Model.SelectedCategory : "")">
+                            <i class="fa fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+                <p class="text-center text-muted">Toplam @Model.TotalCount istek</p>
+            </nav>
+        }
+    </abp-card-body>
+</abp-card>
 
 @section scripts {
     <script type="module">
@@ -105,64 +153,5 @@
             autoAnimate(list);
         }
     </script>
-
-    <script>
-        $(function () {
-            var service = featureRequest.featureRequests.featureRequest;
-
-            $('.upvote-btn').click(function (e) {
-                e.preventDefault();
-                var $button = $(this);
-                var id = $button.attr('data-id');
-                var isVoted = $button.attr('data-voted') === 'true';
-                var $countSpan = $button.find('.vote-count');
-                var $icon = $button.find('i');
-
-                $button.prop('disabled', true);
-
-                if (!isVoted) {
-                    service.upvote(id).then(function () {
-                        var currentCount = parseInt($countSpan.text());
-                        $countSpan.text(currentCount + 1);
-                        
-                        $button.removeClass('btn-outline-success').addClass('btn-success');
-                        $button.attr('data-voted', 'true');
-                        $icon.removeClass('fa-arrow-up').addClass('fa-check');
-                        
-                        abp.notify.success('Oy verildi! 🚀');
-                        $button.prop('disabled', false);
-                    }).catch(function(err){
-                         $button.prop('disabled', false);
-                         abp.notify.error('Bir hata oluştu.');
-                    });
-                } 
-                else {
-                    service.downvote(id).then(function () {
-                        var currentCount = parseInt($countSpan.text());
-                        $countSpan.text(currentCount - 1);
-
-                        $button.removeClass('btn-success').addClass('btn-outline-success');
-                        $button.attr('data-voted', 'false');
-                        $icon.removeClass('fa-check').addClass('fa-arrow-up');
-
-                        abp.notify.info('Oy geri çekildi.');
-                        $button.prop('disabled', false);
-                    }).catch(function(err){
-                         $button.prop('disabled', false);
-                         abp.notify.error('Bir hata oluştu.');
-                    });
-                }
-            });
-
-            // Kategori filtresi değiştiğinde sayfayı yeniden yükle
-            $('#categoryFilter').change(function() {
-                var selectedCategory = $(this).val();
-                if (selectedCategory) {
-                    window.location.href = '/FeatureRequests?SelectedCategory=' + selectedCategory;
-                } else {
-                    window.location.href = '/FeatureRequests';
-                }
-            });
-        });
-    </script>
+    <abp-script src="/Pages/FeatureRequests/Index.js" />
 }

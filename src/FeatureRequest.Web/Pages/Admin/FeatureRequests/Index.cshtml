@@ -6,39 +6,56 @@
     ViewData["Title"] = "Admin - Özellik İstekleri Yönetimi";
 }
 
-<div class="card">
-    <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h1>🛠️ Özellik İstekleri Yönetimi</h1>
-        </div>
-        <div class="d-flex align-items-center gap-3 flex-wrap">
-            <div class="d-flex align-items-center gap-2">
-                <label class="mb-0 fw-bold">Durum:</label>
-                <select id="statusFilter" class="form-select form-select-sm" style="width: auto;">
-                    <option value="">Tümü</option>
-                    @foreach (var status in Enum.GetValues<FeatureRequestStatus>())
-                    {
-                        <option value="@status" selected="@(Model.SelectedStatus == status)">@status</option>
-                    }
-                </select>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-                <label class="mb-0 fw-bold">Kategori:</label>
-                <select id="categoryFilter" class="form-select form-select-sm" style="width: auto;">
-                    <option value="">Tümü</option>
-                    @foreach (var category in Enum.GetValues<FeatureRequestCategory>())
-                    {
-                        <option value="@category" selected="@(Model.SelectedCategory == category)">@category</option>
-                    }
-                </select>
-            </div>
-        </div>
-    </div>
-    <div class="card-body">
+<abp-card>
+    <abp-card-header>
+        <abp-row>
+            <abp-column size-md="_12">
+                <abp-card-title>🛠️ Özellik İstekleri Yönetimi</abp-card-title>
+            </abp-column>
+        </abp-row>
+        <abp-row class="mt-3">
+            <abp-column size-md="_6">
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="mb-0 fw-bold">Durum:</label>
+                        <select id="statusFilter" class="form-select form-select-sm" style="width: auto;">
+                            <option value="">Tümü</option>
+                            @foreach (var status in Enum.GetValues<FeatureRequestStatus>())
+                            {
+                                <option value="@status" selected="@(Model.SelectedStatus == status)">@status</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="mb-0 fw-bold">Kategori:</label>
+                        <select id="categoryFilter" class="form-select form-select-sm" style="width: auto;">
+                            <option value="">Tümü</option>
+                            @foreach (var category in Enum.GetValues<FeatureRequestCategory>())
+                            {
+                                <option value="@category" selected="@(Model.SelectedCategory == category)">@category</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </abp-column>
+            <abp-column size-md="_6" class="text-end">
+                <div class="d-flex align-items-center gap-2 justify-content-end">
+                    <label class="mb-0 fw-bold">Sayfa başına:</label>
+                    <select id="pageSizeFilter" class="form-select form-select-sm" style="width: auto;">
+                        @foreach (var size in new[] { 5, 10, 20, 50 })
+                        {
+                            <option value="@size" selected="@(Model.PageSize == size)">@size</option>
+                        }
+                    </select>
+                </div>
+            </abp-column>
+        </abp-row>
+    </abp-card-header>
+    <abp-card-body>
         @if (Model.RequestList != null && Model.RequestList.Any())
         {
-            <table class="table table-hover">
-                <thead class="table-dark">
+            <abp-table striped-rows="true" hoverable-rows="true">
+                <thead>
                     <tr>
                         <th>Başlık</th>
                         <th>Kategori</th>
@@ -67,9 +84,12 @@
                             <td>@item.CreationTime.ToShortDateString()</td>
                             <td>
                                 <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                        Durum Değiştir
-                                    </button>
+                                    <abp-button button-type="Outline_Primary" 
+                                                size="Small" 
+                                                data-bs-toggle="dropdown"
+                                                text="Durum Değiştir"
+                                                icon-type="Other"
+                                                icon="fa fa-chevron-down" />
                                     <ul class="dropdown-menu">
                                         @foreach (var status in Enum.GetValues<FeatureRequestStatus>())
                                         {
@@ -89,16 +109,45 @@
                         </tr>
                     }
                 </tbody>
-            </table>
+            </abp-table>
         }
         else
         {
-            <div class="alert alert-info text-center">
-                <i class="fa fa-info-circle"></i> Filtrelere uygun özellik isteği bulunamadı.
-            </div>
+            <abp-row>
+                <abp-column>
+                    <div class="alert alert-info text-center">
+                        <i class="fa fa-info-circle"></i> Filtrelere uygun özellik isteği bulunamadı.
+                    </div>
+                </abp-column>
+            </abp-row>
         }
-    </div>
-</div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="?CurrentPage=@(Model.CurrentPage - 1)&PageSize=@Model.PageSize@(Model.SelectedStatus.HasValue ? "&SelectedStatus=" + Model.SelectedStatus : "")@(Model.SelectedCategory.HasValue ? "&SelectedCategory=" + Model.SelectedCategory : "")">
+                            <i class="fa fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="?CurrentPage=@i&PageSize=@Model.PageSize@(Model.SelectedStatus.HasValue ? "&SelectedStatus=" + Model.SelectedStatus : "")@(Model.SelectedCategory.HasValue ? "&SelectedCategory=" + Model.SelectedCategory : "")">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="?CurrentPage=@(Model.CurrentPage + 1)&PageSize=@Model.PageSize@(Model.SelectedStatus.HasValue ? "&SelectedStatus=" + Model.SelectedStatus : "")@(Model.SelectedCategory.HasValue ? "&SelectedCategory=" + Model.SelectedCategory : "")">
+                            <i class="fa fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+                <p class="text-center text-muted">Toplam @Model.TotalCount istek</p>
+            </nav>
+        }
+    </abp-card-body>
+</abp-card>
 
 @functions {
     string GetStatusBadgeClass(FeatureRequestStatus status)
@@ -117,50 +166,5 @@
 }
 
 @section scripts {
-    <script>
-        $(function () {
-            var service = featureRequest.featureRequests.featureRequest;
-
-            // Filtre değişikliklerini dinle
-            $('#statusFilter, #categoryFilter').change(function () {
-                var status = $('#statusFilter').val();
-                var category = $('#categoryFilter').val();
-                var url = '/Admin/FeatureRequests';
-                var params = [];
-                
-                if (status) params.push('SelectedStatus=' + status);
-                if (category) params.push('SelectedCategory=' + category);
-                
-                if (params.length > 0) {
-                    url += '?' + params.join('&');
-                }
-                
-                window.location.href = url;
-            });
-
-            // Durum değiştirme
-            $('.status-change-btn').click(function (e) {
-                e.preventDefault();
-                var $link = $(this);
-                var id = $link.data('id');
-                var status = $link.data('status');
-                var statusName = $link.data('status-name');
-
-                abp.message.confirm(
-                    'Durumu "' + statusName + '" olarak değiştirmek istediğinize emin misiniz?',
-                    'Durum Değiştir'
-                ).then(function (confirmed) {
-                    if (confirmed) {
-                        service.updateStatus(id, status).then(function () {
-                            abp.notify.success('Durum başarıyla güncellendi!');
-                            location.reload();
-                        }).catch(function (err) {
-                            console.error(err);
-                            abp.notify.error('Bir hata oluştu.');
-                        });
-                    }
-                });
-            });
-        });
-    </script>
+    <abp-script src="/Pages/Admin/FeatureRequests/Index.js" />
 }

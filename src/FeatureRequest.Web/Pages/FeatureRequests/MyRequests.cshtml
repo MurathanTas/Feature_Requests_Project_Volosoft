@@ -7,78 +7,94 @@
     ViewData["Title"] = "İsteklerim";
 }
 
-<div class="card">
-    <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h1>📋 İsteklerim</h1>
-            <a href="/FeatureRequests/Create" class="btn btn-primary">
-                <i class="fa fa-plus"></i> Yeni İstek Oluştur
-            </a>
-        </div>
-        
-        <ul class="nav nav-tabs card-header-tabs">
-            <li class="nav-item">
-                <a class="nav-link @(Model.Filter == "mine" || string.IsNullOrEmpty(Model.Filter) ? "active" : "")" 
-                   href="/FeatureRequests/MyRequests?Filter=mine">
-                    <i class="fa fa-user"></i> Oluşturduklarım
+<abp-card>
+    <abp-card-header>
+        <abp-row>
+            <abp-column size-md="_6">
+                <abp-card-title>📋 İsteklerim</abp-card-title>
+            </abp-column>
+            <abp-column size-md="_6" class="text-end">
+                <a href="/FeatureRequests/Create" class="btn btn-primary">
+                    <i class="fa fa-plus"></i> Yeni İstek Oluştur
                 </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link @(Model.Filter == "voted" ? "active" : "")" 
-                   href="/FeatureRequests/MyRequests?Filter=voted">
-                    <i class="fa fa-heart"></i> Beğendiklerim
-                </a>
-            </li>
-        </ul>
-    </div>
+            </abp-column>
+        </abp-row>
+        <abp-row class="mt-3">
+            <abp-column>
+                <ul class="nav nav-tabs card-header-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link @(Model.Filter == "mine" || string.IsNullOrEmpty(Model.Filter) ? "active" : "")" 
+                           href="/FeatureRequests/MyRequests?Filter=mine">
+                            <i class="fa fa-user"></i> Oluşturduklarım
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(Model.Filter == "voted" ? "active" : "")" 
+                           href="/FeatureRequests/MyRequests?Filter=voted">
+                            <i class="fa fa-heart"></i> Beğendiklerim
+                        </a>
+                    </li>
+                </ul>
+            </abp-column>
+        </abp-row>
+    </abp-card-header>
     
-    <div class="card-body">
+    <abp-card-body>
         @if (Model.RequestList != null && Model.RequestList.Any())
         {
             <div class="list-group">
                 @foreach (var item in Model.RequestList)
                 {
                     <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 border rounded shadow-sm p-3">
-                        <div class="d-flex w-100 justify-content-between">
-                            <a href="/FeatureRequests/Detail?id=@item.Id" class="text-decoration-none">
-                                <h5 class="mb-1 fw-bold text-primary">@item.Title</h5>
-                            </a>
-                            <small class="text-muted">@item.CreationTime.ToShortDateString()</small>
-                        </div>
+                        <abp-row>
+                            <abp-column size-md="_8">
+                                <a href="/FeatureRequests/Detail?id=@item.Id" class="text-decoration-none">
+                                    <h5 class="mb-1 fw-bold text-primary">@item.Title</h5>
+                                </a>
+                            </abp-column>
+                            <abp-column size-md="_4" class="text-end">
+                                <small class="text-muted">@item.CreationTime.ToShortDateString()</small>
+                            </abp-column>
+                        </abp-row>
 
                         <a href="/FeatureRequests/Detail?id=@item.Id" class="text-decoration-none text-secondary">
                             <p class="mb-1">@item.Description</p>
                         </a>
 
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <div>
+                        <abp-row class="mt-3">
+                            <abp-column size-md="_6">
                                 <span class="badge bg-info text-dark me-1">@item.CategoryId</span>
                                 <span class="badge @GetStatusBadgeClass(item.Status)">@item.Status</span>
-                            </div>
-                            
-                            <span class="badge @(item.IsVoted ? "bg-success" : "bg-secondary") fs-6">
-                                <i class="fa @(item.IsVoted ? "fa-check" : "fa-arrow-up")"></i> @item.VoteCount Oy
-                            </span>
-                        </div>
+                            </abp-column>
+                            <abp-column size-md="_6" class="text-end">
+                                <span class="badge @(item.IsVoted ? "bg-success" : "bg-secondary") fs-6">
+                                    <i class="fa @(item.IsVoted ? "fa-check" : "fa-arrow-up")"></i> @item.VoteCount Oy
+                                </span>
+                            </abp-column>
+                        </abp-row>
                     </div>
                 }
             </div>
         }
         else
         {
-            <div class="alert alert-info text-center">
-                @if (Model.Filter == "voted")
-                {
-                    <i class="fa fa-heart-broken"></i> //Henüz hiçbir özellik isteğini beğenmediniz.
-                }
-                else
-                {
-                    <i class="fa fa-inbox"></i> //Henüz hiçbir özellik isteği oluşturmadınız.
-                }
-            </div>
+            <abp-row>
+                <abp-column>
+                    <div class="alert alert-info text-center">
+                        @if (Model.Filter == "voted")
+                        {
+                            <i class="fa fa-heart-broken"></i> @:Henüz hiçbir özellik isteğini beğenmediniz.
+                        }
+                        else
+                        {
+                            <i class="fa fa-inbox"></i> @:Henüz hiçbir özellik isteği oluşturmadınız.
+                        }
+                    </div>
+                </abp-column>
+            </abp-row>
         }
-    </div>
-</div>
+    </abp-card-body>
+</abp-card>
 
 @functions {
     string GetStatusBadgeClass(FeatureRequestStatus status)

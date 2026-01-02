@@ -6,140 +6,134 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<div class="container-fluid">
-    <h1 class="mb-4">📊 Dashboard</h1>
-    
-    <!-- Özet Kartlar -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white shadow">
-                <div class="card-body text-center">
-                    <h2 class="display-4 fw-bold">@Model.Statistics.TotalRequests</h2>
-                    <p class="mb-0"><i class="fa fa-lightbulb"></i> Toplam İstek</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white shadow">
-                <div class="card-body text-center">
-                    <h2 class="display-4 fw-bold">@Model.Statistics.TotalVotes</h2>
-                    <p class="mb-0"><i class="fa fa-arrow-up"></i> Toplam Oy</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white shadow">
-                <div class="card-body text-center">
-                    <h2 class="display-4 fw-bold">@Model.Statistics.TotalComments</h2>
-                    <p class="mb-0"><i class="fa fa-comment"></i> Toplam Yorum</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-dark shadow">
-                <div class="card-body text-center">
-                    @{
-                        var avgVotes = Model.Statistics.TotalRequests > 0 
-                            ? (double)Model.Statistics.TotalVotes / Model.Statistics.TotalRequests 
-                            : 0;
-                    }
-                    <h2 class="display-4 fw-bold">@avgVotes.ToString("F1")</h2>
-                    <p class="mb-0"><i class="fa fa-chart-line"></i> Ortalama Oy</p>
-                </div>
-            </div>
-        </div>
-    </div>
+<abp-card>
+    <abp-card-header>
+        <abp-card-title>📊 Dashboard</abp-card-title>
+    </abp-card-header>
+</abp-card>
 
-    <!-- Grafikler -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0"><i class="fa fa-folder"></i> Kategoriye Göre İstekler</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="categoryChart" height="250"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0"><i class="fa fa-tasks"></i> Duruma Göre Dağılım</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="statusChart" height="250"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
+<abp-row class="mt-4">
+    <abp-column size-md="_3">
+        <abp-card class="bg-primary text-white shadow">
+            <abp-card-body class="text-center">
+                <h2 class="display-4 fw-bold">@Model.Statistics.TotalRequests</h2>
+                <p class="mb-0"><i class="fa fa-lightbulb"></i> Toplam İstek</p>
+            </abp-card-body>
+        </abp-card>
+    </abp-column>
+    <abp-column size-md="_3">
+        <abp-card class="bg-success text-white shadow">
+            <abp-card-body class="text-center">
+                <h2 class="display-4 fw-bold">@Model.Statistics.TotalVotes</h2>
+                <p class="mb-0"><i class="fa fa-arrow-up"></i> Toplam Oy</p>
+            </abp-card-body>
+        </abp-card>
+    </abp-column>
+    <abp-column size-md="_3">
+        <abp-card class="bg-info text-white shadow">
+            <abp-card-body class="text-center">
+                <h2 class="display-4 fw-bold">@Model.Statistics.TotalComments</h2>
+                <p class="mb-0"><i class="fa fa-comment"></i> Toplam Yorum</p>
+            </abp-card-body>
+        </abp-card>
+    </abp-column>
+    <abp-column size-md="_3">
+        <abp-card class="bg-warning text-dark shadow">
+            <abp-card-body class="text-center">
+                @{
+                    var avgVotes = Model.Statistics.TotalRequests > 0 
+                        ? (double)Model.Statistics.TotalVotes / Model.Statistics.TotalRequests 
+                        : 0;
+                }
+                <h2 class="display-4 fw-bold">@avgVotes.ToString("F1")</h2>
+                <p class="mb-0"><i class="fa fa-chart-line"></i> Ortalama Oy</p>
+            </abp-card-body>
+        </abp-card>
+    </abp-column>
+</abp-row>
 
-    <!-- Kategoriye Göre Oylar -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0"><i class="fa fa-star"></i> Kategoriye Göre Toplam Oylar</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="categoryVotesChart" height="250"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0"><i class="fa fa-trophy"></i> En Çok Oy Alan İstekler</h5>
-                </div>
-                <div class="card-body">
-                    @if (Model.Statistics.TopVotedRequests.Any())
-                    {
-                        <table class="table table-striped">
-                            <thead>
+<abp-row class="mt-4">
+    <abp-column size-md="_6">
+        <abp-card class="shadow">
+            <abp-card-header>
+                <abp-card-title><i class="fa fa-folder"></i> Kategoriye Göre İstekler</abp-card-title>
+            </abp-card-header>
+            <abp-card-body>
+                <canvas id="categoryChart" height="250"></canvas>
+            </abp-card-body>
+        </abp-card>
+    </abp-column>
+    <abp-column size-md="_6">
+        <abp-card class="shadow">
+            <abp-card-header>
+                <abp-card-title><i class="fa fa-tasks"></i> Duruma Göre Dağılım</abp-card-title>
+            </abp-card-header>
+            <abp-card-body>
+                <canvas id="statusChart" height="250"></canvas>
+            </abp-card-body>
+        </abp-card>
+    </abp-column>
+</abp-row>
+
+<abp-row class="mt-4 mb-4">
+    <abp-column size-md="_6">
+        <abp-card class="shadow">
+            <abp-card-header>
+                <abp-card-title><i class="fa fa-star"></i> Kategoriye Göre Toplam Oylar</abp-card-title>
+            </abp-card-header>
+            <abp-card-body>
+                <canvas id="categoryVotesChart" height="250"></canvas>
+            </abp-card-body>
+        </abp-card>
+    </abp-column>
+    <abp-column size-md="_6">
+        <abp-card class="shadow">
+            <abp-card-header>
+                <abp-card-title><i class="fa fa-trophy"></i> En Çok Oy Alan İstekler</abp-card-title>
+            </abp-card-header>
+            <abp-card-body>
+                @if (Model.Statistics.TopVotedRequests.Any())
+                {
+                    <abp-table striped-rows="true">
+                        <thead>
+                            <tr>
+                                <th>Başlık</th>
+                                <th>Kategori</th>
+                                <th>Oy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Statistics.TopVotedRequests)
+                            {
                                 <tr>
-                                    <th>Başlık</th>
-                                    <th>Kategori</th>
-                                    <th>Oy</th>
+                                    <td>
+                                        <a href="/FeatureRequests/Detail?id=@item.Id">@item.Title</a>
+                                    </td>
+                                    <td><span class="badge bg-info text-dark">@item.CategoryId</span></td>
+                                    <td><strong>@item.VoteCount</strong></td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in Model.Statistics.TopVotedRequests)
-                                {
-                                    <tr>
-                                        <td>
-                                            <a href="/FeatureRequests/Detail?id=@item.Id">@item.Title</a>
-                                        </td>
-                                        <td><span class="badge bg-info text-dark">@item.CategoryId</span></td>
-                                        <td><strong>@item.VoteCount</strong></td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    }
-                    else
-                    {
-                        <p class="text-muted text-center">Henüz veri yok.</p>
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
+                            }
+                        </tbody>
+                    </abp-table>
+                }
+                else
+                {
+                    <p class="text-muted text-center">Henüz veri yok.</p>
+                }
+            </abp-card-body>
+        </abp-card>
+    </abp-column>
+</abp-row>
 @section scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         $(function () {
-            // Kategori verileri
             var categoryLabels = @Html.Raw(JsonSerializer.Serialize(Model.Statistics.CategoryStats.Select(x => x.Category)));
             var categoryData = @Html.Raw(JsonSerializer.Serialize(Model.Statistics.CategoryStats.Select(x => x.RequestCount)));
             var categoryVotes = @Html.Raw(JsonSerializer.Serialize(Model.Statistics.CategoryStats.Select(x => x.TotalVotes)));
-
-            // Durum verileri
             var statusLabels = @Html.Raw(JsonSerializer.Serialize(Model.Statistics.StatusStats.Select(x => x.Status)));
             var statusData = @Html.Raw(JsonSerializer.Serialize(Model.Statistics.StatusStats.Select(x => x.Count)));
 
-            // Renk paleti
             var colors = [
                 'rgba(54, 162, 235, 0.8)',
                 'rgba(255, 99, 132, 0.8)',
@@ -149,7 +143,6 @@
                 'rgba(255, 159, 64, 0.8)'
             ];
 
-            // Kategori Chart (Bar)
             new Chart(document.getElementById('categoryChart'), {
                 type: 'bar',
                 data: {
@@ -163,34 +156,23 @@
                 },
                 options: {
                     responsive: true,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
                 }
             });
 
-            // Durum Chart (Doughnut)
             new Chart(document.getElementById('statusChart'), {
                 type: 'doughnut',
                 data: {
                     labels: statusLabels,
-                    datasets: [{
-                        data: statusData,
-                        backgroundColor: colors
-                    }]
+                    datasets: [{ data: statusData, backgroundColor: colors }]
                 },
                 options: {
                     responsive: true,
-                    plugins: {
-                        legend: { position: 'right' }
-                    }
+                    plugins: { legend: { position: 'right' } }
                 }
             });
 
-            // Kategoriye Göre Oylar (Bar)
             new Chart(document.getElementById('categoryVotesChart'), {
                 type: 'bar',
                 data: {
@@ -204,14 +186,11 @@
                 },
                 options: {
                     responsive: true,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
                 }
             });
         });
     </script>
 }
+

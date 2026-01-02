@@ -147,6 +147,32 @@ namespace FeatureRequest.FeatureRequests
             return dtos;
         }
 
+        public async Task<PagedResultDto<FeatureRequestDto>> GetPagedRequestsAsync(GetFeatureRequestsInput input)
+        {
+            NormalizePaginationInput(input);
+            
+            var queryable = await Repository.GetQueryableAsync();
+            
+            if (input.Category.HasValue)
+            {
+                queryable = queryable.Where(x => x.CategoryId == input.Category.Value);
+            }
+
+            var totalCount = await AsyncExecuter.CountAsync(queryable);
+            
+            var query = queryable
+                .OrderByDescending(x => x.VoteCount)
+                .ThenByDescending(x => x.CreationTime)
+                .Skip(input.SkipCount)
+                .Take(input.MaxResultCount);
+                
+            var entities = await AsyncExecuter.ToListAsync(query);
+            var dtos = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
+
+            await EnrichWithUserDataAsync(dtos);
+
+            return new PagedResultDto<FeatureRequestDto>(totalCount, dtos);
+        }
 
         [Authorize]
         public async Task UpvoteAsync(Guid id)
@@ -231,6 +257,39 @@ namespace FeatureRequest.FeatureRequests
             }
 
             return dtos;
+        }
+
+        [Authorize(FeatureRequestPermissions.FeatureRequests.UpdateStatus)]
+        public async Task<PagedResultDto<FeatureRequestDto>> GetPagedFilteredListAsync(GetAdminFeatureRequestsInput input)
+        {
+            NormalizePaginationInput(input);
+            
+            var queryable = await Repository.GetQueryableAsync();
+
+            if (input.Status.HasValue)
+            {
+                queryable = queryable.Where(x => x.Status == input.Status.Value);
+            }
+
+            if (input.Category.HasValue)
+            {
+                queryable = queryable.Where(x => x.CategoryId == input.Category.Value);
+            }
+
+            var totalCount = await AsyncExecuter.CountAsync(queryable);
+
+            var query = queryable
+                .OrderByDescending(x => x.VoteCount)
+                .ThenByDescending(x => x.CreationTime)
+                .Skip(input.SkipCount)
+                .Take(input.MaxResultCount);
+
+            var entities = await AsyncExecuter.ToListAsync(query);
+            var dtos = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
+
+            await EnrichWithCreatorNamesAsync(dtos);
+
+            return new PagedResultDto<FeatureRequestDto>(totalCount, dtos);
         }
 
         [Authorize]
@@ -331,5 +390,53 @@ namespace FeatureRequest.FeatureRequests
 
             return result;
         }
+
+        #region Private Helper Methods
+
+        private static void NormalizePaginationInput(GetFeatureRequestsInput input)
+        {
+            if (input.SkipCount < 0)
+                input.SkipCount = 0;
+
+            if (input.MaxResultCount < GetFeatureRequestsInput.MinPageSize)
+                input.MaxResultCount = GetFeatureRequestsInput.MinPageSize;
+
+            if (input.MaxResultCount > GetFeatureRequestsInput.MaxPageSize)
+                input.MaxResultCount = GetFeatureRequestsInput.MaxPageSize;
+        }
+
+        private async Task EnrichWithUserDataAsync(List<FeatureRequestDto> dtos)
+        {
+            if (!dtos.Any()) return;
+
+            var requestIds = dtos.Select(x => x.Id).ToList();
+
+            if (CurrentUser.Id.HasValue)
+            {
+                var myVotes = await _voteRepository.GetListAsync(v =>
+                    requestIds.Contains(v.FeatureRequestId) && v.CreatorId == CurrentUser.Id);
+
+                foreach (var dto in dtos)
+                {
+                    dto.IsVoted = myVotes.Any(v => v.FeatureRequestId == dto.Id);
+                }
+            }
+
+            await EnrichWithCreatorNamesAsync(dtos);
+        }
+
+        private async Task EnrichWithCreatorNamesAsync(List<FeatureRequestDto> dtos)
+        {
+            foreach (var dto in dtos)
+            {
+                if (dto.CreatorId.HasValue)
+                {
+                    var user = await _userRepository.FindAsync(dto.CreatorId.Value);
+                    if (user != null) dto.CreatorUserName = user.UserName;
+                }
+            }
+        }
+
+        #endregion
     }
 }

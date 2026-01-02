@@ -9,260 +9,163 @@
 
 @if (Model.RequestDetail != null)
 {
-    <div class="container mt-4">
-
-        <div class="d-flex justify-content-between align-items-center mb-3">
+    <abp-row class="mb-3">
+        <abp-column size-md="_6">
             <a href="/FeatureRequests" class="btn btn-outline-secondary">
                 <i class="fa fa-arrow-left"></i> Listeye Dön
             </a>
-
+        </abp-column>
+        <abp-column size-md="_6" class="text-end">
             @if (CurrentUser.IsAuthenticated && CurrentUser.Id == Model.RequestDetail.CreatorId)
             {
                 <a href="/FeatureRequests/Edit?id=@Model.RequestDetail.Id" class="btn btn-warning shadow-sm">
                     <i class="fa fa-edit"></i> Düzenle
                 </a>
             }
-        </div>
+        </abp-column>
+    </abp-row>
 
-        <div class="card shadow-lg border-0">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
-                <span class="badge bg-info text-dark fs-6">@Model.RequestDetail.CategoryId</span>
-                <span class="badge bg-secondary fs-6">@Model.RequestDetail.Status</span>
+    <abp-card class="shadow-lg border-0">
+        <abp-card-header class="bg-light">
+            <abp-row>
+                <abp-column size-md="_6">
+                    <span class="badge bg-info text-dark fs-6">@Model.RequestDetail.CategoryId</span>
+                </abp-column>
+                <abp-column size-md="_6" class="text-end">
+                    <span class="badge bg-secondary fs-6">@Model.RequestDetail.Status</span>
+                </abp-column>
+            </abp-row>
+        </abp-card-header>
+
+        <abp-card-body class="p-4">
+            <h2 class="card-title text-primary mb-3 fw-bold">@Model.RequestDetail.Title</h2>
+            <hr />
+            <p class="card-text fs-5 text-dark" style="white-space: pre-wrap; line-height: 1.6;">@Model.RequestDetail.Description</p>
+
+            <div class="mt-4 p-3 bg-light rounded border">
+                <abp-row class="text-muted small">
+                    <abp-column size-md="_6">
+                        <i class="fa fa-user me-1"></i> Oluşturan:
+                        <strong>@(string.IsNullOrEmpty(Model.RequestDetail.CreatorUserName) ? "Anonim" : Model.RequestDetail.CreatorUserName)</strong>
+                    </abp-column>
+                    <abp-column size-md="_6" class="text-md-end">
+                        <i class="fa fa-calendar me-1"></i> Tarih: @Model.RequestDetail.CreationTime.ToString("f")
+                    </abp-column>
+                </abp-row>
             </div>
+        </abp-card-body>
 
-            <div class="card-body p-4">
-                <h2 class="card-title text-primary mb-3 fw-bold">@Model.RequestDetail.Title</h2>
-                <hr />
-                <p class="card-text fs-5 text-dark" style="white-space: pre-wrap; line-height: 1.6;">@Model.RequestDetail.Description</p>
-
-                <div class="mt-4 p-3 bg-light rounded border">
-                    <div class="row text-muted small">
-                        <div class="col-md-6">
-                            <i class="fa fa-user me-1"></i> Oluşturan:
-                            <strong>@(string.IsNullOrEmpty(Model.RequestDetail.CreatorUserName) ? "Anonim" : Model.RequestDetail.CreatorUserName)</strong>
-                        </div>
-                        <div class="col-md-6 text-md-end">
-                            <i class="fa fa-calendar me-1"></i> Tarih: @Model.RequestDetail.CreationTime.ToString("f")
-                        </div>
-                    </div>
+        <abp-card-footer class="text-center py-4 bg-white border-top-0">
+            @{
+                var isVotingClosed = Model.RequestDetail.Status == FeatureRequestStatus.Approved ||
+                                     Model.RequestDetail.Status == FeatureRequestStatus.Completed || 
+                                     Model.RequestDetail.Status == FeatureRequestStatus.Rejected;
+            }
+            
+            @if (isVotingClosed)
+            {
+                <div class="text-muted">
+                    <i class="fa fa-lock"></i> Bu istek için oylama kapatılmıştır.
+                    <br/>
+                    <span class="badge bg-secondary fs-6 mt-2">@Model.RequestDetail.VoteCount Oy</span>
                 </div>
-            </div>
+            }
+            else if (CurrentUser.IsAuthenticated)
+            {
+                <button id="voteButton"
+                        data-id="@Model.RequestDetail.Id"
+                        data-voted="@Model.RequestDetail.IsVoted.ToString().ToLower()"
+                        class="btn btn-lg px-5 shadow transition-btn @(Model.RequestDetail.IsVoted ? "btn-success" : "btn-outline-success")"
+                        style="min-width: 200px;">
+                    <i class="fa @(Model.RequestDetail.IsVoted ? "fa-check" : "fa-arrow-up")"></i>
+                    <span id="voteText">@(Model.RequestDetail.IsVoted ? "Oy Verildi" : "Oy Ver")</span>
+                    (<span id="VoteCount">@Model.RequestDetail.VoteCount</span>)
+                </button>
 
-            <div class="card-footer text-center py-4 bg-white border-top-0">
-                @{
-                    var isVotingClosed = Model.RequestDetail.Status == FeatureRequestStatus.Approved ||
-                                         Model.RequestDetail.Status == FeatureRequestStatus.Completed || 
-                                         Model.RequestDetail.Status == FeatureRequestStatus.Rejected;
-                }
-                
-                @if (isVotingClosed)
-                {
-                    <div class="text-muted">
-                        <i class="fa fa-lock"></i> Bu istek için oylama kapatılmıştır.
-                        <br/>
-                        <span class="badge bg-secondary fs-6 mt-2">@Model.RequestDetail.VoteCount Oy</span>
-                    </div>
-                }
-                else if (CurrentUser.IsAuthenticated)
-                {
-                    <button id="voteButton"
-                            data-id="@Model.RequestDetail.Id"
-                            data-voted="@Model.RequestDetail.IsVoted.ToString().ToLower()"
-                            class="btn btn-lg px-5 shadow transition-btn @(Model.RequestDetail.IsVoted ? "btn-success" : "btn-outline-success")"
-                            style="min-width: 200px;">
-
-                        <i class="fa @(Model.RequestDetail.IsVoted ? "fa-check" : "fa-arrow-up")"></i>
-                        <span id="voteText">@(Model.RequestDetail.IsVoted ? "Oy Verildi" : "Oy Ver")</span>
-                        (<span id="VoteCount">@Model.RequestDetail.VoteCount</span>)
-                    </button>
-
-                    <div class="mt-2 text-muted small fst-italic" id="voteHelpText">
-                        @(Model.RequestDetail.IsVoted ? "Oyunuzu geri çekmek için tıklayın" : "Desteklemek için tıklayın")
-                    </div>
-                }
-                else
-                {
-                    <a href="/Account/Login" class="btn btn-outline-primary btn-lg px-5 shadow">
-                        <i class="fa fa-lock"></i> Oy Vermek İçin Giriş Yapın
-                    </a>
-                }
-            </div>
-        </div>
-    </div>
+                <div class="mt-2 text-muted small fst-italic" id="voteHelpText">
+                    @(Model.RequestDetail.IsVoted ? "Oyunuzu geri çekmek için tıklayın" : "Desteklemek için tıklayın")
+                </div>
+            }
+            else
+            {
+                <a href="/Account/Login" class="btn btn-outline-primary btn-lg px-5 shadow">
+                    <i class="fa fa-lock"></i> Oy Vermek İçin Giriş Yapın
+                </a>
+            }
+        </abp-card-footer>
+    </abp-card>
 }
 else
 {
-    <div class="alert alert-danger shadow-sm">
-        <i class="fa fa-exclamation-triangle"></i> Kayıt bulunamadı!
-    </div>
+    <abp-row>
+        <abp-column>
+            <div class="alert alert-danger shadow-sm">
+                <i class="fa fa-exclamation-triangle"></i> Kayıt bulunamadı!
+            </div>
+        </abp-column>
+    </abp-row>
 }
 
+<abp-row class="mt-4 mb-5">
+    <abp-column>
+        <h3 class="mb-3">💬 Yorumlar (<span id="commentCount">@(Model.Comments?.Count ?? 0)</span>)</h3>
 
-<div class="container mt-4 mb-5">
-    <h3 class="mb-3">💬 Yorumlar (<span id="commentCount">@(Model.Comments?.Count ?? 0)</span>)</h3>
-
-    @if (CurrentUser.IsAuthenticated)
-    {
-        <div class="card mb-4 shadow-sm">
-            <div class="card-body">
-                <div id="commentForm">
-                    <input type="hidden" id="featureRequestId" value="@Model.RequestDetail.Id" />
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Düşüncelerinizi paylaşın:</label>
-                        <textarea id="commentText" class="form-control" rows="3" placeholder="Bu özellik hakkında ne düşünüyorsunuz?"></textarea>
-                        <span id="commentError" class="text-danger"></span>
-                    </div>
-                    <button type="button" id="submitCommentBtn" class="btn btn-primary px-4">
-                        <i class="fa fa-paper-plane"></i> Gönder
-                    </button>
-                </div>
-            </div>
-        </div>
-    }
-    else
-    {
-        <div class="alert alert-warning">
-            Yorum yapmak için <a href="/Account/Login" class="alert-link">giriş yapmalısınız</a>.
-        </div>
-    }
-
-    <div id="commentsContainer" class="list-group">
-        @if (Model.Comments != null && Model.Comments.Any())
+        @if (CurrentUser.IsAuthenticated)
         {
-            @foreach (var comment in Model.Comments)
-            {
-                <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 border rounded bg-white">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1 fw-bold text-primary">
-                            <i class="fa fa-user-circle"></i> @comment.CreatorUserName
-                        </h6>
-                        <small class="text-muted">@comment.CreationTime.ToString("g")</small>
+            <abp-card class="mb-4 shadow-sm">
+                <abp-card-body>
+                    <div id="commentForm">
+                        <input type="hidden" id="featureRequestId" value="@Model.RequestDetail.Id" />
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Düşüncelerinizi paylaşın:</label>
+                            <textarea id="commentText" class="form-control" rows="3" placeholder="Bu özellik hakkında ne düşünüyorsunuz?"></textarea>
+                            <span id="commentError" class="text-danger"></span>
+                        </div>
+                        <abp-button id="submitCommentBtn" 
+                                    button-type="Primary" 
+                                    text="Gönder"
+                                    icon="paper-plane" />
                     </div>
-                    <p class="mb-1 text-dark mt-2">@comment.CommentText</p>
-                </div>
-            }
+                </abp-card-body>
+            </abp-card>
         }
-    </div>
-    
-    <p id="noCommentsText" class="text-muted text-center py-4" style="display: @(Model.Comments == null || !Model.Comments.Any() ? "block" : "none");">
-        Henüz yorum yapılmamış. İlk yorumu sen yap! 🎉
-    </p>
-</div>
+        else
+        {
+            <div class="alert alert-warning">
+                Yorum yapmak için <a href="/Account/Login" class="alert-link">giriş yapmalısınız</a>.
+            </div>
+        }
+
+        <div id="commentsContainer" class="list-group">
+            @if (Model.Comments != null && Model.Comments.Any())
+            {
+                @foreach (var comment in Model.Comments)
+                {
+                    <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 border rounded bg-white">
+                        <abp-row>
+                            <abp-column size-md="_8">
+                                <h6 class="mb-1 fw-bold text-primary">
+                                    <i class="fa fa-user-circle"></i> @comment.CreatorUserName
+                                </h6>
+                            </abp-column>
+                            <abp-column size-md="_4" class="text-end">
+                                <small class="text-muted">@comment.CreationTime.ToString("g")</small>
+                            </abp-column>
+                        </abp-row>
+                        <p class="mb-1 text-dark mt-2">@comment.CommentText</p>
+                    </div>
+                }
+            }
+        </div>
+        
+        <p id="noCommentsText" class="text-muted text-center py-4" style="display: @(Model.Comments == null || !Model.Comments.Any() ? "block" : "none");">
+            Henüz yorum yapılmamış. İlk yorumu sen yap! 🎉
+        </p>
+    </abp-column>
+</abp-row>
 
 @section scripts {
-    <script>
-        $(function () {
-            var featureRequestService = featureRequest.featureRequests.featureRequest;
-            var commentService = featureRequest.featureRequests.featureRequestComment;
-
-            $('#voteButton').click(function () {
-                var $button = $(this);
-                var id = $button.attr('data-id');
-                var isVoted = $button.attr('data-voted') === 'true'; 
-
-                var $countSpan = $('#VoteCount');
-                var $textSpan = $('#voteText');
-                var $helpText = $('#voteHelpText');
-                var $icon = $button.find('i');
-
-                $button.prop('disabled', true);
-
-                if (!isVoted) {
-                    featureRequestService.upvote(id).then(function () {
-                        var currentCount = parseInt($countSpan.text());
-                        $countSpan.text(currentCount + 1);
-
-                        $button.removeClass('btn-outline-success').addClass('btn-success');
-                        $button.attr('data-voted', 'true');
-                        $icon.removeClass('fa-arrow-up').addClass('fa-check');
-                        $textSpan.text("Oy Verildi");
-                        $helpText.text("Oyunuzu geri çekmek için tıklayın");
-
-                        abp.notify.success('Oyunuz başarıyla kaydedildi!');
-                        $button.prop('disabled', false);
-                    }).catch(handleError);
-                }
-                else {
-                    featureRequestService.downvote(id).then(function () {
-                        var currentCount = parseInt($countSpan.text());
-                        $countSpan.text(currentCount - 1);
-
-                        $button.removeClass('btn-success').addClass('btn-outline-success');
-                        $button.attr('data-voted', 'false');
-                        $icon.removeClass('fa-check').addClass('fa-arrow-up');
-                        $textSpan.text("Oy Ver");
-                        $helpText.text("Desteklemek için tıklayın");
-
-                        abp.notify.info('Oyunuz geri çekildi.');
-                        $button.prop('disabled', false);
-                    }).catch(handleError);
-                }
-
-                function handleError(err) {
-                    $button.prop('disabled', false);
-                    console.error(err);
-                    abp.notify.error('Bir hata oluştu.');
-                }
-            });
-
-            $('#submitCommentBtn').click(function () {
-                var $button = $(this);
-                var $textarea = $('#commentText');
-                var $error = $('#commentError');
-                var commentText = $textarea.val().trim();
-                var featureRequestId = $('#featureRequestId').val();
-
-                // Validasyon
-                $error.text('');
-                if (!commentText) {
-                    $error.text('Yorum boş olamaz.');
-                    return;
-                }
-
-                $button.prop('disabled', true);
-                $button.html('<i class="fa fa-spinner fa-spin"></i> Gönderiliyor...');
-
-                commentService.create({
-                    featureRequestId: featureRequestId,
-                    commentText: commentText
-                }).then(function (result) {
-                    var now = new Date();
-                    var formattedDate = now.toLocaleDateString('tr-TR') + ' ' + now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-                    
-                    var newCommentHtml = `
-                        <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 border rounded bg-white" style="animation: fadeIn 0.3s;">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1 fw-bold text-primary">
-                                    <i class="fa fa-user-circle"></i> ${abp.currentUser.userName}
-                                </h6>
-                                <small class="text-muted">${formattedDate}</small>
-                            </div>
-                            <p class="mb-1 text-dark mt-2">${commentText}</p>
-                        </div>
-                    `;
-                    
-                    $('#commentsContainer').prepend(newCommentHtml);
-                    
-                    $('#noCommentsText').hide();
-                    
-                    var currentCount = parseInt($('#commentCount').text()) || 0;
-                    $('#commentCount').text(currentCount + 1);
-                    
-                    $textarea.val('');
-                    
-                    abp.notify.success('Yorumunuz eklendi! 💬');
-                    
-                    $button.prop('disabled', false);
-                    $button.html('<i class="fa fa-paper-plane"></i> Gönder');
-                }).catch(function (err) {
-                    console.error(err);
-                    $error.text('Yorum eklenirken bir hata oluştu.');
-                    $button.prop('disabled', false);
-                    $button.html('<i class="fa fa-paper-plane"></i> Gönder');
-                });
-            });
-        });
-    </script>
+    <abp-script src="/Pages/FeatureRequests/Detail.js" />
     
     <style>
         @@keyframes fadeIn {
