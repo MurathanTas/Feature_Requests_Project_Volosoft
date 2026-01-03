@@ -37,6 +37,7 @@ Bu proje, yazılım ürünlerinin geliştirilmesinde kullanıcı geri bildirimle
 
 - [.NET 9.0+ SDK](https://dotnet.microsoft.com/download/dotnet)
 - [Node.js v20.11+](https://nodejs.org/en)
+- [ABP CLI](https://abp.io/docs/latest/cli) - `dotnet tool install -g Volo.Abp.Studio.Cli`
 - [PostgreSQL](https://www.postgresql.org/download/) (veya başka bir veritabanı)
 
 ### Adımlar
