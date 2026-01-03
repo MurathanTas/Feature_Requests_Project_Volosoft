@@ -1,4 +1,4 @@
-using FeatureRequest.Entities;
+﻿using FeatureRequest.Entities;
 using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Collections.Generic;
@@ -42,15 +42,27 @@ namespace FeatureRequest.FeatureRequests
 
             var commentDtos = ObjectMapper.Map<List<FeatureRequestComment>, List<FeatureRequestCommentDto>>(comments);
 
+            var creatorIds = commentDtos
+                .Where(d => d.CreatorId.HasValue)
+                .Select(d => d.CreatorId!.Value)
+                .Distinct()
+                .ToList();
+
+            var userDict = new Dictionary<Guid, string>();
+            foreach (var creatorId in creatorIds)
+            {
+                var user = await _userRepository.FindAsync(creatorId);
+                if (user != null)
+                {
+                    userDict[user.Id] = user.UserName;
+                }
+            }
+
             foreach (var dto in commentDtos)
             {
-                if (dto.CreatorId.HasValue)
+                if (dto.CreatorId.HasValue && userDict.TryGetValue(dto.CreatorId.Value, out var userName))
                 {
-                    var user = await _userRepository.FindAsync(dto.CreatorId.Value);
-                    if (user != null)
-                    {
-                        dto.CreatorUserName = user.UserName;
-                    }
+                    dto.CreatorUserName = userName;
                 }
             }
 

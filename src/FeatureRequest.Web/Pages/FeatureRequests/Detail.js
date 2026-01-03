@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   var featureRequestService = featureRequest.featureRequests.featureRequest;
   var commentService = featureRequest.featureRequests.featureRequestComment;
 
@@ -95,7 +95,7 @@
 
       $textarea.val('');
 
-      abp.notify.success('Yorumunuz eklendi! 💬');
+      abp.notify.success('Yorumunuz eklendi! ');
 
       $button.prop('disabled', false);
       $button.html('<i class="fa fa-paper-plane"></i> Gönder');
