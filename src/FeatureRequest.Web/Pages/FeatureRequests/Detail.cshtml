@@ -111,7 +111,7 @@ else
 
 <abp-row class="mt-4 mb-5">
     <abp-column>
-        <h3 class="mb-3">@string.Format(L["DetailPage:CommentsTitle"].Value, Model.Comments?.Count ?? 0)</h3>
+        <h3 class="mb-3">💬 Yorumlar (<span id="commentCount">@(Model.Comments?.Count ?? 0)</span>)</h3>
 
         @if (CurrentUser.IsAuthenticated)
         {

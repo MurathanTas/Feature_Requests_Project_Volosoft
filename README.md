@@ -143,8 +143,6 @@ FeatureRequest/
 
 2. **Entity Framework DbContext Thread Safety:** `Task.WhenAll` ile paralel sorgu çalıştırınca DbContext hatası aldım. Sıralı sorguya çevirdim.
 
-3. **ABP Lokalizasyon:** Tarayıcı dil ayarına göre bazı çevirilerin eksik kalması sorunu yaşadım.
-
 ---
 
 ## 📚 Öğrendiklerim
