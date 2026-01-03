@@ -10,6 +10,9 @@ namespace FeatureRequest.Web.Pages.FeatureRequests
     public class IndexModel : PageModel
     {
         private readonly IFeatureRequestAppService _featureRequestAppService;
+        
+        private const int MinPageSize = 5;
+        private const int MaxPageSize = 50;
 
         public IReadOnlyList<FeatureRequestDto> RequestList { get; private set; } = [];
         public long TotalCount { get; private set; }
@@ -29,8 +32,17 @@ namespace FeatureRequest.Web.Pages.FeatureRequests
             _featureRequestAppService = featureRequestAppService;
         }
 
-        public async Task OnGetAsync()
+        public async Task<IActionResult> OnGetAsync()
         {
+            // Parametre validasyonu
+            if (CurrentPage < 1)
+                CurrentPage = 1;
+            
+            if (PageSize < MinPageSize)
+                PageSize = MinPageSize;
+            else if (PageSize > MaxPageSize)
+                PageSize = MaxPageSize;
+            
             var input = new GetFeatureRequestsInput
             {
                 Category = SelectedCategory,
@@ -45,7 +57,12 @@ namespace FeatureRequest.Web.Pages.FeatureRequests
             TotalPages = PageSize > 0 ? (int)((TotalCount + PageSize - 1) / PageSize) : 1;
             
             if (CurrentPage > TotalPages && TotalPages > 0)
+            {
                 CurrentPage = TotalPages;
+                return RedirectToPage(new { CurrentPage, PageSize, SelectedCategory });
+            }
+            
+            return Page();
         }
     }
 }

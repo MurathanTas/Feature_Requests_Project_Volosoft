@@ -24,6 +24,11 @@ namespace FeatureRequest.Web.Pages.FeatureRequests
 
         public async Task<IActionResult> OnPostAsync()
         {
+            if (!ModelState.IsValid)
+            {
+                return Page();
+            }
+
             await _featureRequestAppService.CreateAsync(Request);
             return RedirectToPage("Index");
         }

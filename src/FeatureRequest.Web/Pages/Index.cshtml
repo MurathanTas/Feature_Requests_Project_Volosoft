@@ -13,12 +13,12 @@
     .hero-section {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 100px 0;
-        border-radius: 0 0 50px 50px;
+        padding: 80px 0;
+        border-radius: 0 0 30px 30px;
         margin-top: -1.5rem;
         margin-left: -1.5rem;
         margin-right: -1.5rem;
-        margin-bottom: 3rem;
+        margin-bottom: 2rem;
         box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
     
@@ -36,14 +36,14 @@
     }
     
     .feature-icon {
-        width: 80px;
-        height: 80px;
+        width: 70px;
+        height: 70px;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        margin-bottom: 1.5rem;
-        font-size: 2rem;
+        margin-bottom: 1rem;
+        font-size: 1.75rem;
     }
     
     .icon-bg-1 { background-color: rgba(102, 126, 234, 0.1); color: #667eea; }
@@ -67,13 +67,13 @@
 
 <div class="hero-section text-center">
     <div class="container">
-        <h1 class="display-3 fw-bold mb-4 animate__animated animate__fadeInDown">
+        <h1 class="display-4 fw-bold mb-3">
             @L["HomePage:Title"]
         </h1>
-        <p class="lead mb-5 col-lg-8 mx-auto opacity-75 animate__animated animate__fadeInUp">
+        <p class="lead mb-4 col-lg-8 mx-auto opacity-75">
             @L["HomePage:Subtitle"]
         </p>
-        <div class="d-flex justify-content-center gap-3 animate__animated animate__fadeInUp animate__delay-1s">
+        <div class="d-flex justify-content-center gap-3">
             @if (!CurrentUser.IsAuthenticated)
             {
                 <a href="/Account/Login" class="btn btn-light btn-lg cta-btn text-primary">
@@ -93,52 +93,49 @@
     </div>
 </div>
 
-<div class="container pb-5">
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card feature-card p-4 text-center">
-                <div class="card-body">
+<abp-container class="pb-5">
+    <abp-row class="g-4">
+        <abp-column size-md="_4">
+            <abp-card class="feature-card p-4 text-center h-100">
+                <abp-card-body>
                     <div class="feature-icon icon-bg-1 mx-auto">
                         <i class="fas fa-plus"></i>
                     </div>
-                    <h3 class="h4 fw-bold mb-3">@L["HomePage:Feature1Title"]</h3>
-                    <p class="text-muted">
+                    <h3 class="h5 fw-bold mb-2">@L["HomePage:Feature1Title"]</h3>
+                    <p class="text-muted mb-0">
                         @L["HomePage:Feature1Description"]
                     </p>
-                </div>
-            </div>
-        </div>
+                </abp-card-body>
+            </abp-card>
+        </abp-column>
         
-        <div class="col-md-4">
-            <div class="card feature-card p-4 text-center">
-                <div class="card-body">
+        <abp-column size-md="_4">
+            <abp-card class="feature-card p-4 text-center h-100">
+                <abp-card-body>
                     <div class="feature-icon icon-bg-2 mx-auto">
                         <i class="fas fa-vote-yea"></i>
                     </div>
-                    <h3 class="h4 fw-bold mb-3">@L["HomePage:Feature2Title"]</h3>
-                    <p class="text-muted">
+                    <h3 class="h5 fw-bold mb-2">@L["HomePage:Feature2Title"]</h3>
+                    <p class="text-muted mb-0">
                         @L["HomePage:Feature2Description"]
                     </p>
-                </div>
-            </div>
-        </div>
+                </abp-card-body>
+            </abp-card>
+        </abp-column>
         
-        <div class="col-md-4">
-            <div class="card feature-card p-4 text-center">
-                <div class="card-body">
+        <abp-column size-md="_4">
+            <abp-card class="feature-card p-4 text-center h-100">
+                <abp-card-body>
                     <div class="feature-icon icon-bg-3 mx-auto">
                         <i class="fas fa-comments"></i>
                     </div>
-                    <h3 class="h4 fw-bold mb-3">@L["HomePage:Feature3Title"]</h3>
-                    <p class="text-muted">
+                    <h3 class="h5 fw-bold mb-2">@L["HomePage:Feature3Title"]</h3>
+                    <p class="text-muted mb-0">
                         @L["HomePage:Feature3Description"]
                     </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                </abp-card-body>
+            </abp-card>
+        </abp-column>
+    </abp-row>
+</abp-container>
 
-@section scripts {
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-}

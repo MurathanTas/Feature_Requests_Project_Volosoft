@@ -95,24 +95,7 @@ namespace FeatureRequest.FeatureRequests
         {
             var result = await base.GetListAsync(input);
 
-            if (CurrentUser.Id.HasValue && result.Items.Any())
-            {
-                var requestIds = result.Items.Select(x => x.Id).ToList();
-
-                var myVotes = await _voteRepository.GetListAsync(v =>
-                    requestIds.Contains(v.FeatureRequestId) && v.CreatorId == CurrentUser.Id);
-
-                foreach (var dto in result.Items)
-                {
-                    dto.IsVoted = myVotes.Any(v => v.FeatureRequestId == dto.Id);
-
-                    if (dto.CreatorId.HasValue)
-                    {
-                        var user = await _userRepository.FindAsync(dto.CreatorId.Value);
-                        if (user != null) dto.CreatorUserName = user.UserName;
-                    }
-                }
-            }
+            await EnrichWithUserDataAsync(result.Items.ToList());
 
             return result;
         }
@@ -133,22 +116,7 @@ namespace FeatureRequest.FeatureRequests
             var entities = await AsyncExecuter.ToListAsync(query);
             var dtos = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
 
-            if (CurrentUser.Id.HasValue && dtos.Any())
-            {
-                var requestIds = dtos.Select(x => x.Id).ToList();
-                var myVotes = await _voteRepository.GetListAsync(v =>
-                    requestIds.Contains(v.FeatureRequestId) && v.CreatorId == CurrentUser.Id);
-
-                foreach (var dto in dtos)
-                {
-                    dto.IsVoted = myVotes.Any(v => v.FeatureRequestId == dto.Id);
-                    if (dto.CreatorId.HasValue)
-                    {
-                        var user = await _userRepository.FindAsync(dto.CreatorId.Value);
-                        if (user != null) dto.CreatorUserName = user.UserName;
-                    }
-                }
-            }
+            await EnrichWithUserDataAsync(dtos);
 
             return dtos;
         }
@@ -253,14 +221,7 @@ namespace FeatureRequest.FeatureRequests
             var entities = await AsyncExecuter.ToListAsync(query);
             var dtos = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
 
-            foreach (var dto in dtos)
-            {
-                if (dto.CreatorId.HasValue)
-                {
-                    var user = await _userRepository.FindAsync(dto.CreatorId.Value);
-                    if (user != null) dto.CreatorUserName = user.UserName;
-                }
-            }
+            await EnrichWithCreatorNamesAsync(dtos);
 
             return dtos;
         }
@@ -339,12 +300,9 @@ namespace FeatureRequest.FeatureRequests
             foreach (var dto in dtos)
             {
                 dto.IsVoted = true;
-                if (dto.CreatorId.HasValue)
-                {
-                    var user = await _userRepository.FindAsync(dto.CreatorId.Value);
-                    if (user != null) dto.CreatorUserName = user.UserName;
-                }
             }
+
+            await EnrichWithCreatorNamesAsync(dtos);
 
             return dtos;
         }
@@ -397,7 +355,6 @@ namespace FeatureRequest.FeatureRequests
             return result;
         }
 
-        #region Private Helper Methods
 
         private static void NormalizePaginationInput(GetFeatureRequestsInput input)
         {
@@ -433,16 +390,32 @@ namespace FeatureRequest.FeatureRequests
 
         private async Task EnrichWithCreatorNamesAsync(List<FeatureRequestDto> dtos)
         {
+            var creatorIds = dtos
+                .Where(d => d.CreatorId.HasValue)
+                .Select(d => d.CreatorId!.Value)
+                .Distinct()
+                .ToList();
+
+            if (!creatorIds.Any()) return;
+
+            var userDict = new Dictionary<Guid, string>();
+            foreach (var creatorId in creatorIds)
+            {
+                var user = await _userRepository.FindAsync(creatorId);
+                if (user != null)
+                {
+                    userDict[user.Id] = user.UserName;
+                }
+            }
+
             foreach (var dto in dtos)
             {
-                if (dto.CreatorId.HasValue)
+                if (dto.CreatorId.HasValue && userDict.TryGetValue(dto.CreatorId.Value, out var userName))
                 {
-                    var user = await _userRepository.FindAsync(dto.CreatorId.Value);
-                    if (user != null) dto.CreatorUserName = user.UserName;
+                    dto.CreatorUserName = userName;
                 }
             }
         }
 
-        #endregion
     }
 }

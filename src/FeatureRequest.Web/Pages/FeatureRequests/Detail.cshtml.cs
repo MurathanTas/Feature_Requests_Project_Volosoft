@@ -32,19 +32,25 @@ namespace FeatureRequest.Web.Pages.FeatureRequests
             _commentAppService = commentAppService;
         }
 
-        public async Task OnGetAsync()
+        public async Task<IActionResult> OnGetAsync()
         {
             if (Id == Guid.Empty)
             {
-                Response.Redirect("/FeatureRequests");
-                return;
+                return RedirectToPage("Index");
             }
 
             RequestDetail = await _featureRequestAppService.GetAsync(Id);
 
+            if (RequestDetail == null)
+            {
+                return NotFound();
+            }
+
             Comments = await _commentAppService.GetCommentsAsync(Id);
 
             NewComment = new CreateCommentDto { FeatureRequestId = Id };
+
+            return Page();
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -56,13 +62,7 @@ namespace FeatureRequest.Web.Pages.FeatureRequests
                 return Page();
             }
 
-            try
-            {
-                await _commentAppService.CreateAsync(NewComment);
-            }
-            catch (Exception ex)
-            {
-            }
+            await _commentAppService.CreateAsync(NewComment);
 
             return RedirectToPage(new { id = NewComment.FeatureRequestId });
         }

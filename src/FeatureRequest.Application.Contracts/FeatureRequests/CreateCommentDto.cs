@@ -5,7 +5,7 @@ namespace FeatureRequest.FeatureRequests
 {
     public class CreateCommentDto
     {
-        [Required]
+        [Required(ErrorMessage = "Özellik isteği ID'si zorunludur.")]
         public Guid FeatureRequestId { get; set; }
 
         [Required]
