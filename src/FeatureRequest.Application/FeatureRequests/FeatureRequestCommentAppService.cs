@@ -1,4 +1,5 @@
 ﻿using FeatureRequest.Entities;
+using FeatureRequest.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Collections.Generic;
@@ -24,10 +25,11 @@ namespace FeatureRequest.FeatureRequests
 
         public FeatureRequestCommentAppService(
             IRepository<FeatureRequestComment, Guid> repository,
-            IIdentityUserRepository userRepository)
+            IIdentityUserRepository userRepository) 
             : base(repository)
         {
             _userRepository = userRepository;
+
         }
 
         [Authorize]
@@ -48,21 +50,26 @@ namespace FeatureRequest.FeatureRequests
                 .Distinct()
                 .ToList();
 
-            var userDict = new Dictionary<Guid, string>();
-            foreach (var creatorId in creatorIds)
+            if (!creatorIds.Any())
             {
-                var user = await _userRepository.FindAsync(creatorId);
-                if (user != null)
-                {
-                    userDict[user.Id] = user.UserName;
-                }
+                return commentDtos.OrderByDescending(c => c.CreationTime).ToList();
             }
+         
+            var genericRepo = (IRepository<IdentityUser, Guid>)_userRepository;
+
+            var users = await genericRepo.GetListAsync(u => creatorIds.Contains(u.Id));
+
+            var userDict = users.ToDictionary(u => u.Id, u => u.UserName);
 
             foreach (var dto in commentDtos)
             {
                 if (dto.CreatorId.HasValue && userDict.TryGetValue(dto.CreatorId.Value, out var userName))
                 {
                     dto.CreatorUserName = userName;
+                }
+                else
+                {
+                    dto.CreatorUserName = "Anonim";
                 }
             }
 

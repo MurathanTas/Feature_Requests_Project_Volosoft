@@ -25,6 +25,14 @@ namespace FeatureRequest.Entities
             }
         }
 
+        public bool CanBeVoted()
+        {
+            return Status != FeatureRequestStatus.Approved
+                && Status != FeatureRequestStatus.Completed
+                && Status != FeatureRequestStatus.Rejected;
+        }
+
+
         public FeatureRequestCategory CategoryId { get; set; }
 
         public ICollection<FeatureRequestComment> Comments { get; set; }

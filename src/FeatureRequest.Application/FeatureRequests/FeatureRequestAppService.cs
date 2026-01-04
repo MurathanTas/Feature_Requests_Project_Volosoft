@@ -22,21 +22,21 @@ namespace FeatureRequest.FeatureRequests
             UpdateFeatureRequestDto>,
         IFeatureRequestAppService
     {
-        private readonly IRepository<FeatureRequestVote, Guid> _voteRepository;
+        private readonly FeatureRequestManager _featureRequestManager;
         private readonly IRepository<FeatureRequestComment, Guid> _commentRepository;
         private readonly IIdentityUserRepository _userRepository;
 
         public FeatureRequestAppService(
             IRepository<Entities.FeatureRequest, Guid> repository,
-            IRepository<FeatureRequestVote, Guid> voteRepository,
+            FeatureRequestManager featureRequestManager,
             IRepository<FeatureRequestComment, Guid> commentRepository,
-            IIdentityUserRepository userRepository) 
+            IIdentityUserRepository userRepository)
             : base(repository)
         {
-            _voteRepository = voteRepository;
+            _featureRequestManager = featureRequestManager;
             _commentRepository = commentRepository;
             _userRepository = userRepository;
-            
+
             GetPolicyName = FeatureRequestPermissions.FeatureRequests.Default;
             GetListPolicyName = FeatureRequestPermissions.FeatureRequests.Default;
             CreatePolicyName = FeatureRequestPermissions.FeatureRequests.Create;
@@ -55,12 +55,12 @@ namespace FeatureRequest.FeatureRequests
         public override async Task<FeatureRequestDto> UpdateAsync(Guid id, UpdateFeatureRequestDto input)
         {
             var entity = await Repository.GetAsync(id);
-            
+
             if (entity.CreatorId != CurrentUser.Id)
             {
                 throw new Volo.Abp.Authorization.AbpAuthorizationException("Bu özellik isteğini düzenleme yetkiniz yok.");
             }
-            
+
             return await base.UpdateAsync(id, input);
         }
 
@@ -83,14 +83,13 @@ namespace FeatureRequest.FeatureRequests
 
             if (CurrentUser.Id.HasValue)
             {
-                dto.IsVoted = await _voteRepository.AnyAsync(v =>
-                    v.FeatureRequestId == id && v.CreatorId == CurrentUser.Id);
+                dto.IsVoted = await _featureRequestManager.HasUserVotedAsync(id, CurrentUser.Id.Value);
             }
 
             return dto;
         }
 
-     
+
         public override async Task<PagedResultDto<FeatureRequestDto>> GetListAsync(PagedAndSortedResultRequestDto input)
         {
             var result = await base.GetListAsync(input);
@@ -103,12 +102,12 @@ namespace FeatureRequest.FeatureRequests
         public async Task<List<FeatureRequestDto>> GetTopRequestsAsync(int count, FeatureRequestCategory? category = null)
         {
             var queryable = await Repository.GetQueryableAsync();
-            
+
             if (category.HasValue)
             {
                 queryable = queryable.Where(x => x.CategoryId == category.Value);
             }
-            
+
             var query = queryable
                 .OrderByDescending(x => x.VoteCount)
                 .ThenByDescending(x => x.CreationTime)
@@ -124,22 +123,22 @@ namespace FeatureRequest.FeatureRequests
         public async Task<PagedResultDto<FeatureRequestDto>> GetPagedRequestsAsync(GetFeatureRequestsInput input)
         {
             NormalizePaginationInput(input);
-            
+
             var queryable = await Repository.GetQueryableAsync();
-            
+
             if (input.Category.HasValue)
             {
                 queryable = queryable.Where(x => x.CategoryId == input.Category.Value);
             }
 
             var totalCount = await AsyncExecuter.CountAsync(queryable);
-            
+
             var query = queryable
                 .OrderByDescending(x => x.VoteCount)
                 .ThenByDescending(x => x.CreationTime)
                 .Skip(input.SkipCount)
                 .Take(input.MaxResultCount);
-                
+
             var entities = await AsyncExecuter.ToListAsync(query);
             var dtos = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
 
@@ -162,33 +161,8 @@ namespace FeatureRequest.FeatureRequests
 
         private async Task UpdateVoteAsync(Guid id)
         {
-            var featureRequest = await Repository.GetAsync(id);
-            
-            // Onaylanmış, tamamlanmış veya reddedilmiş isteklere oy verilemez
-            var nonVotableStatuses = new[] { 
-                FeatureRequestStatus.Approved, 
-                FeatureRequestStatus.Completed, 
-                FeatureRequestStatus.Rejected 
-            };
-            if (nonVotableStatuses.Contains(featureRequest.Status))
-            {
-                throw new Volo.Abp.UserFriendlyException("Bu özellik isteği artık oylamaya kapalı.");
-            }
-            
-            var existingVote = await _voteRepository.FirstOrDefaultAsync(v =>
-                v.FeatureRequestId == id && v.CreatorId == CurrentUser.Id);
-
-            if (existingVote == null)
-            {
-                await _voteRepository.InsertAsync(new FeatureRequestVote { FeatureRequestId = id });
-                featureRequest.Upvote();
-            }
-            else
-            {
-                await _voteRepository.DeleteAsync(existingVote);
-                featureRequest.Downvote();
-            }
-            await Repository.UpdateAsync(featureRequest);
+            // Tüm vote iş mantığı FeatureRequestManager'a devredildi
+            await _featureRequestManager.ToggleVoteAsync(id, CurrentUser.Id!.Value);
         }
 
         [Authorize(FeatureRequestPermissions.FeatureRequests.UpdateStatus)]
@@ -230,7 +204,7 @@ namespace FeatureRequest.FeatureRequests
         public async Task<PagedResultDto<FeatureRequestDto>> GetPagedFilteredListAsync(GetAdminFeatureRequestsInput input)
         {
             NormalizePaginationInput(input);
-            
+
             var queryable = await Repository.GetQueryableAsync();
 
             if (input.Status.HasValue)
@@ -271,12 +245,11 @@ namespace FeatureRequest.FeatureRequests
             var dtos = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(entities);
 
             var requestIds = dtos.Select(x => x.Id).ToList();
-            var myVotes = await _voteRepository.GetListAsync(v =>
-                requestIds.Contains(v.FeatureRequestId) && v.CreatorId == CurrentUser.Id);
+            var votedIds = await _featureRequestManager.GetUserVotesForRequestsAsync(requestIds, CurrentUser.Id!.Value);
 
             foreach (var dto in dtos)
             {
-                dto.IsVoted = myVotes.Any(v => v.FeatureRequestId == dto.Id);
+                dto.IsVoted = votedIds.Contains(dto.Id);
             }
 
             return dtos;
@@ -285,8 +258,7 @@ namespace FeatureRequest.FeatureRequests
         [Authorize]
         public async Task<List<FeatureRequestDto>> GetMyVotedRequestsAsync()
         {
-            var myVotes = await _voteRepository.GetListAsync(v => v.CreatorId == CurrentUser.Id);
-            var votedRequestIds = myVotes.Select(v => v.FeatureRequestId).ToList();
+            var votedRequestIds = await _featureRequestManager.GetVotedRequestIdsAsync(CurrentUser.Id!.Value);
 
             var queryable = await Repository.GetQueryableAsync();
             var query = queryable
@@ -309,48 +281,81 @@ namespace FeatureRequest.FeatureRequests
 
         public async Task<DashboardStatisticsDto> GetDashboardStatisticsAsync()
         {
+            
             var queryable = await Repository.GetQueryableAsync();
-            var allRequests = await AsyncExecuter.ToListAsync(queryable);
-            var allComments = await _commentRepository.GetListAsync();
+
+            var totalComments = await _commentRepository.CountAsync();
+
+            var totalRequests = await AsyncExecuter.CountAsync(queryable);
+
+
+            var totalVotes = await AsyncExecuter.SumAsync(queryable, x => (int?)x.VoteCount) ?? 0;
 
             var result = new DashboardStatisticsDto
             {
-                TotalRequests = allRequests.Count,
-                TotalVotes = allRequests.Sum(x => x.VoteCount),
-                TotalComments = allComments.Count
+                TotalRequests = totalRequests,
+                TotalVotes = totalVotes,
+                TotalComments = totalComments,
+                CategoryStats = new List<CategoryStatDto>(),
+                StatusStats = new List<StatusStatDto>(),
+                TopVotedRequests = new List<FeatureRequestDto>()
             };
 
-            // Kategori istatistikleri
-            var categories = Enum.GetValues<FeatureRequestCategory>();
-            foreach (var category in categories)
+          
+            var categoryGroupQuery = queryable
+                .GroupBy(x => x.CategoryId)
+                .Select(g => new
+                {
+                    CategoryId = g.Key,
+                    Count = g.Count(),
+                    TotalVotes = g.Sum(x => (int?)x.VoteCount) ?? 0
+                });
+
+            var categoryResults = await AsyncExecuter.ToListAsync(categoryGroupQuery);
+
+            // Sonuçları DTO'ya çevir 
+            foreach (var item in categoryResults)
             {
-                var requestsInCategory = allRequests.Where(x => x.CategoryId == category).ToList();
                 result.CategoryStats.Add(new CategoryStatDto
                 {
-                    Category = category.ToString(),
-                    RequestCount = requestsInCategory.Count,
-                    TotalVotes = requestsInCategory.Sum(x => x.VoteCount)
+                    Category = item.CategoryId.ToString(), // Enum ismini string yapar
+                    RequestCount = item.Count,
+                    TotalVotes = item.TotalVotes
                 });
             }
 
-            // Durum istatistikleri
-            var statuses = Enum.GetValues<FeatureRequestStatus>();
-            foreach (var status in statuses)
+            // Durum İstatistikleri        
+            var statusGroupQuery = queryable
+                .GroupBy(x => x.Status)
+                .Select(g => new
+                {
+                    Status = g.Key,
+                    Count = g.Count()
+                });
+
+            var statusResults = await AsyncExecuter.ToListAsync(statusGroupQuery);
+
+            foreach (var item in statusResults)
             {
                 result.StatusStats.Add(new StatusStatDto
                 {
-                    Status = status.ToString(),
-                    Count = allRequests.Count(x => x.Status == status)
+                    Status = item.Status.ToString(),
+                    Count = item.Count
                 });
             }
 
-            // En çok oy alan 5 istek
-            var topRequests = allRequests
+            // En Çok Oy Alan 5 İstek
+            var topRequestsQuery = queryable
                 .OrderByDescending(x => x.VoteCount)
-                .Take(5)
-                .ToList();
+                .ThenByDescending(x => x.CreationTime) // Oylar eşitse yeni olana öncelik ver
+                .Take(5);
 
-            result.TopVotedRequests = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(topRequests);
+            var topRequestsEntities = await AsyncExecuter.ToListAsync(topRequestsQuery);
+
+            result.TopVotedRequests = ObjectMapper.Map<List<Entities.FeatureRequest>, List<FeatureRequestDto>>(topRequestsEntities);
+
+            // Eğer Top 5 listesinde de kullanıcı isimlerini göstermek istiyorsan:
+            await EnrichWithCreatorNamesAsync(result.TopVotedRequests);
 
             return result;
         }
@@ -376,12 +381,11 @@ namespace FeatureRequest.FeatureRequests
 
             if (CurrentUser.Id.HasValue)
             {
-                var myVotes = await _voteRepository.GetListAsync(v =>
-                    requestIds.Contains(v.FeatureRequestId) && v.CreatorId == CurrentUser.Id);
+                var votedIds = await _featureRequestManager.GetUserVotesForRequestsAsync(requestIds, CurrentUser.Id.Value);
 
                 foreach (var dto in dtos)
                 {
-                    dto.IsVoted = myVotes.Any(v => v.FeatureRequestId == dto.Id);
+                    dto.IsVoted = votedIds.Contains(dto.Id);
                 }
             }
 
@@ -398,15 +402,14 @@ namespace FeatureRequest.FeatureRequests
 
             if (!creatorIds.Any()) return;
 
-            var userDict = new Dictionary<Guid, string>();
-            foreach (var creatorId in creatorIds)
-            {
-                var user = await _userRepository.FindAsync(creatorId);
-                if (user != null)
-                {
-                    userDict[user.Id] = user.UserName;
-                }
-            }
+            var userRepository = (IRepository<IdentityUser, Guid>)_userRepository;
+            var queryable = await userRepository.GetQueryableAsync();
+ 
+            var users = await AsyncExecuter.ToListAsync(
+                queryable.Where(u => creatorIds.Contains(u.Id))
+            );
+
+            var userDict = users.ToDictionary(u => u.Id, u => u.UserName);
 
             foreach (var dto in dtos)
             {

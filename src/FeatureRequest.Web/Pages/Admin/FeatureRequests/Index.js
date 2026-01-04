@@ -41,7 +41,20 @@
       if (confirmed) {
         service.updateStatus(id, status).then(function () {
           abp.notify.success(l('AdminPage:StatusUpdateSuccess'));
-          location.reload();
+
+          // Sayfa yenilemeden sadece o satırı güncelle
+          var $row = $link.closest('tr');
+          var $statusBadge = $row.find('td:eq(2) .badge');
+
+          // Badge sınıfını ve metnini güncelle
+          $statusBadge.removeClass('bg-secondary bg-warning bg-success bg-primary bg-dark bg-danger text-dark');
+          $statusBadge.addClass(getStatusBadgeClass(status));
+          $statusBadge.text(statusName);
+
+          // Dropdown'daki active sınıfını güncelle
+          $row.find('.status-change-btn').removeClass('active');
+          $link.addClass('active');
+
         }).catch(function (err) {
           console.error(err);
           abp.notify.error(l('AdminPage:StatusUpdateError'));
@@ -49,6 +62,19 @@
       }
     });
   });
+
+  // Status badge sınıfını döndüren yardımcı fonksiyon
+  function getStatusBadgeClass(status) {
+    switch (status) {
+      case 0: return 'bg-secondary'; // Draft
+      case 1: return 'bg-warning text-dark'; // Pending
+      case 2: return 'bg-success'; // Approved
+      case 3: return 'bg-primary'; // Planned
+      case 4: return 'bg-dark'; // Completed
+      case 5: return 'bg-danger'; // Rejected
+      default: return 'bg-secondary';
+    }
+  }
 
   $('.delete-request-btn').click(function (e) {
     e.preventDefault();
